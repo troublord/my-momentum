@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: mymomentum-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: mymomentum    
+      POSTGRES_PASSWORD: secret123 
+      POSTGRES_DB: mymomentumdb
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
