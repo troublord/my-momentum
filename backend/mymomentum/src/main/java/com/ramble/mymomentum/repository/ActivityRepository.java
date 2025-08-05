@@ -1,0 +1,32 @@
+package com.ramble.mymomentum.repository;
+
+import com.ramble.mymomentum.entity.Activity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface ActivityRepository extends JpaRepository<Activity, UUID> {
+    
+    /**
+     * Find all activities by user ID
+     */
+    List<Activity> findByUserId(UUID userId);
+    
+    /**
+     * Find activity by user ID and activity name
+     */
+    Activity findByUserIdAndName(UUID userId, String name);
+    
+    /**
+     * Check if activity exists by user ID and name
+     */
+    boolean existsByUserIdAndName(UUID userId, String name);
+    
+    /**
+     * Delete all activities by user ID
+     */
+    void deleteByUserId(UUID userId);
+} 
