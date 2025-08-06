@@ -16,17 +16,7 @@ public interface ActivityRepository extends JpaRepository<Activity, UUID> {
     List<Activity> findByUserId(UUID userId);
     
     /**
-     * Find activity by user ID and activity name
-     */
-    Activity findByUserIdAndName(UUID userId, String name);
-    
-    /**
      * Check if activity exists by user ID and name
      */
     boolean existsByUserIdAndName(UUID userId, String name);
-    
-    /**
-     * Delete all activities by user ID
-     */
-    void deleteByUserId(UUID userId);
 } 

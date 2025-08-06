@@ -30,22 +30,22 @@ public class ActivityController {
 
     @PostMapping
     @Operation(
-        summary = "Create a new activity",
-        description = "Creates a new activity for the specified user"
+        summary = "創建新活動",
+        description = "為指定用戶創建新活動"
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "201",
-            description = "Activity created successfully",
+            description = "活動創建成功",
             content = @Content(schema = @Schema(implementation = Activity.class))
         ),
         @ApiResponse(
             responseCode = "400",
-            description = "Bad request - Activity with same name already exists"
+            description = "Bad request - 活動名稱已存在"
         )
     })
     public ResponseEntity<Activity> createActivity(
-            @Parameter(description = "User ID", example = "123e4567-e89b-12d3-a456-426614174000")
+            @Parameter(description = "用戶ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @RequestParam UUID userId,
             @RequestBody CreateActivityRequest request) {
         
@@ -56,18 +56,18 @@ public class ActivityController {
 
     @GetMapping
     @Operation(
-        summary = "Get all activities for a user",
-        description = "Retrieves all activities belonging to the specified user"
+        summary = "獲取用戶的所有活動",
+        description = "獲取指定用戶的所有活動"
     )
     @ApiResponses(value = {
         @ApiResponse(
             responseCode = "200",
-            description = "Activities retrieved successfully",
+            description = "活動獲取成功",
             content = @Content(schema = @Schema(implementation = Activity.class))
         )
     })
     public ResponseEntity<List<Activity>> getActivities(
-            @Parameter(description = "User ID", example = "123e4567-e89b-12d3-a456-426614174000")
+            @Parameter(description = "用戶ID", example = "123e4567-e89b-12d3-a456-426614174000")
             @RequestParam UUID userId) {
         
         log.info("Fetching activities for user: {}", userId);
