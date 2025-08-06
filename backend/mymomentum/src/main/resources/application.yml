@@ -36,7 +36,7 @@ springdoc:
     operations-sorter: method
   info:
     title: MyMomentum API
-    description: Activity tracking and momentum management API
+    description: Super momentum management API
     version: 1.0.0
     contact:
-      name: MyMomentum Team
+      name: Ramble Team

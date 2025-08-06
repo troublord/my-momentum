@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequestMapping("/api/activities")
 @RequiredArgsConstructor
 @Slf4j
-@Tag(name = "Activity Management", description = "APIs for managing user activities")
+@Tag(name = "Activity Management", description = "活動管理")
 public class ActivityController {
 
     private final ActivityService activityService;

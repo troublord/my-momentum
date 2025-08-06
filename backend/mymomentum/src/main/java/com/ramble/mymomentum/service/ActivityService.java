@@ -20,7 +20,7 @@ public class ActivityService {
     private final ActivityRepository activityRepository;
 
     /**
-     * Create a new activity for a user
+     * 建立新活動
      * 
      * @param userId The user ID
      * @param request The activity creation request
@@ -50,7 +50,7 @@ public class ActivityService {
     }
 
     /**
-     * Fetch all activities for a user
+     * 取得某使用者的所有活動
      * 
      * @param userId The user ID
      * @return List of activities for the user
@@ -67,7 +67,7 @@ public class ActivityService {
 
     /**
      * Get a specific activity by ID and user ID
-     * 
+     *
      * @param activityId The activity ID
      * @param userId The user ID
      * @return The activity if found
@@ -76,20 +76,20 @@ public class ActivityService {
     @Transactional(readOnly = true)
     public Activity getActivityByIdAndUserId(UUID activityId, UUID userId) {
         log.info("Fetching activity: {} for user: {}", activityId, userId);
-        
+
         Activity activity = activityRepository.findById(activityId)
                 .orElseThrow(() -> new IllegalArgumentException("Activity not found with ID: " + activityId));
-        
+
         if (!activity.getUserId().equals(userId)) {
             throw new IllegalArgumentException("Activity does not belong to user: " + userId);
         }
-        
+
         return activity;
     }
 
     /**
      * Update an existing activity
-     * 
+     *
      * @param activityId The activity ID
      * @param userId The user ID
      * @param name New activity name (optional)
@@ -100,15 +100,15 @@ public class ActivityService {
      */
     public Activity updateActivity(UUID activityId, UUID userId, String name, Integer goalTime, String color, String icon) {
         log.info("Updating activity: {} for user: {}", activityId, userId);
-        
+
         Activity activity = getActivityByIdAndUserId(activityId, userId);
-        
+
         // Check if new name conflicts with existing activity
-        if (name != null && !name.equals(activity.getName()) && 
+        if (name != null && !name.equals(activity.getName()) &&
             activityRepository.existsByUserIdAndName(userId, name)) {
             throw new IllegalArgumentException("Activity with name '" + name + "' already exists for this user");
         }
-        
+
         // Update fields if provided
         if (name != null) {
             activity.setName(name);
@@ -122,25 +122,25 @@ public class ActivityService {
         if (icon != null) {
             activity.setIcon(icon);
         }
-        
+
         Activity updatedActivity = activityRepository.save(activity);
         log.info("Activity updated successfully: {}", updatedActivity.getId());
-        
+
         return updatedActivity;
     }
 
     /**
      * Delete an activity
-     * 
+     *
      * @param activityId The activity ID
      * @param userId The user ID
      */
     public void deleteActivity(UUID activityId, UUID userId) {
         log.info("Deleting activity: {} for user: {}", activityId, userId);
-        
+
         Activity activity = getActivityByIdAndUserId(activityId, userId);
         activityRepository.delete(activity);
-        
+
         log.info("Activity deleted successfully: {}", activityId);
     }
 } 
