@@ -1,0 +1,30 @@
+# Local Development Profile Configuration
+# Use this file for local development settings
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mymomentumdb
+    username: mymomentum
+    password: secret123
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+# Application Configuration
+app:
+  security:
+    jwt:
+      secret: U/tCUvHbDJMpu43mvYlAjG8j+3knvcP5L2L3DLU6In1+sxXLBWJMFuXlD2H+uXqj
+      expirationMinutes: 60
+  google:
+    oauth:
+      clientId: 861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com
+  cors:
+    allowedOrigins:
+      - http://localhost:3000
+
+server:
+  port: 8080
