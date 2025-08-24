@@ -1,91 +1,127 @@
-# MyMomentum Frontend
+# MyMomentum
 
-MyMomentum 是一個個人習慣追蹤與活動紀錄工具，讓使用者簡單紀錄自己做了什麼、做了多久，並從中看見時間的累積與進步。
+MyMomentum 是一款通用的時間紀錄與習慣追蹤工具，幫助使用者看見日常中的小努力，建立正向循環。
 
-## 功能特色
+## 🎯 專案特色
 
-- **即時紀錄**: 像番茄鐘一樣按「開始」和「結束」，系統自動計算時間
-- **事後紀錄**: 使用者手動填寫活動名稱、時間與日期
-- **活動追蹤**: 顯示累積總時間、本週時間、進度完成率
-- **視覺化進度**: 圓形進度條顯示完成率
-- **響應式設計**: 支援桌機和行動裝置
+- 極簡介面：直覺的操作流程
+- 彈性紀錄：支援即時與手動紀錄
+- 可視化成就：清晰展示進度與統計
+- Google 帳號整合：安全便利的登入體驗
 
-## 技術棧
+## 🚀 快速開始
 
-- React 18
-- TypeScript
-- TailwindCSS
-- React Scripts
+### 前置需求
 
-## 安裝與執行
+- Node.js 16+
+- npm 8+
+- 後端服務 (預設: `http://localhost:8080`)
 
-1. 安裝依賴：
+### 安裝步驟
 
+1. 複製專案
+```bash
+git clone [your-repo-url]
+cd MyMomentum/frontend
+```
+
+2. 安裝依賴
 ```bash
 npm install
 ```
 
-2. 啟動開發伺服器：
+3. 設定環境變數
+```bash
+# .env
+REACT_APP_API_URL=http://localhost:8080
+```
 
+4. 啟動開發伺服器
 ```bash
 npm start
 ```
 
-3. 開啟瀏覽器訪問 [http://localhost:3000](http://localhost:3000)
+應用程式將在 `http://localhost:3000` 啟動。
 
-## 專案結構
+## 🔐 Google OAuth 設定
 
-```
-src/
-├── components/          # React 元件
-│   ├── Header.tsx      # 頁面標題和導覽
-│   ├── SummarySection.tsx  # 總體摘要區塊
-│   ├── ActivityCard.tsx    # 活動卡片
-│   ├── AddActivityCard.tsx # 新增活動卡片
-│   ├── ActivityGrid.tsx    # 活動卡片網格
-│   └── RecordPanel.tsx     # 右側紀錄面板
-├── types/              # TypeScript 類型定義
-├── data/               # Mock 資料
-├── App.tsx             # 主要應用程式元件
-└── index.tsx           # 應用程式入口點
+1. 前往 [Google Cloud Console](https://console.cloud.google.com/)
+2. 建立或選擇專案
+3. 在 "API 和服務" > "憑證" 中建立 OAuth 2.0 用戶端 ID
+4. 設定已授權的 JavaScript 來源：
+   - 開發環境：`http://localhost:3000`
+   - 生產環境：您的網域
+5. 複製用戶端 ID 並更新 `src/index.tsx`：
+```typescript
+<GoogleOAuthProvider clientId="your-client-id">
 ```
 
-## 主要元件說明
+## 📁 專案結構
 
-### Header
+```
+frontend/
+├── public/
+├── src/
+│   ├── components/     # React 組件
+│   │   ├── ActivityCard.tsx
+│   │   ├── ActivityGrid.tsx
+│   │   ├── AddActivityCard.tsx
+│   │   ├── Header.tsx
+│   │   ├── IntroPage.tsx
+│   │   ├── RecordPanel.tsx
+│   │   └── SummarySection.tsx
+│   ├── contexts/      # React Context
+│   │   └── AuthContext.tsx
+│   ├── services/      # API 服務
+│   │   └── auth.ts
+│   ├── types/         # TypeScript 型別
+│   │   └── index.ts
+│   ├── App.tsx        # 應用程式入口
+│   └── index.tsx      # React 入口
+└── package.json
+```
 
-- Logo 和導覽列
-- 包含「全部活動」和「設定」連結
+## 🛠️ 使用技術
 
-### SummarySection
+- React 18
+- TypeScript
+- TailwindCSS
+- @react-oauth/google
+- jwt-decode
 
-- 顯示本週累積時間
-- 最常做的活動
-- 進度完成率
+## 🔄 API 端點
 
-### ActivityGrid
+### Google 登入
+```
+POST /auth/google
+Content-Type: application/json
 
-- 活動卡片網格佈局
-- 每張卡片顯示活動資訊和進度
-- 包含新增活動的卡片
+Request:
+{
+    "idToken": "Google ID Token"
+}
 
-### RecordPanel
+Response:
+{
+    "accessToken": "JWT Token"
+}
+```
 
-- 右側固定的紀錄面板
-- 支援即時紀錄和事後紀錄
-- 活動選擇和時間設定
+## 👥 開發團隊
 
-## 開發說明
+- [您的名字/團隊成員]
 
-目前使用 Mock 資料進行靜態畫面展示，包含：
+## 📝 授權
 
-- 6 個範例活動（閱讀、運動、程式設計、冥想、寫作、學習語言）
-- 本週摘要資料
-- 基本的互動功能（點擊事件、表單操作）
+[授權方式]
 
-後續可以整合：
+## 🤝 貢獻指南
 
-- API 串接
-- 狀態管理（Redux/Context）
-- 路由功能
-- 資料持久化
+1. Fork 專案
+2. 建立特性分支
+3. 提交變更
+4. 發送 Pull Request
+
+## 📮 聯絡方式
+
+[聯絡資訊]

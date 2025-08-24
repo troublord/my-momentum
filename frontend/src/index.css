@@ -20,4 +20,7 @@
   .card {
     @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200;
   }
+  .link {
+    @apply text-primary-600 hover:text-primary-700 underline-offset-2 hover:underline;
+  }
 }

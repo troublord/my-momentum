@@ -36,13 +36,7 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities }) => {
     });
   };
 
-  const formatTime = (minutes: number): string => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0
-      ? `${hours}:${mins.toString().padStart(2, "0")}`
-      : `${mins}分鐘`;
-  };
+  // removed unused formatTime to satisfy linter
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 w-80">
