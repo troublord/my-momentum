@@ -1,8 +1,15 @@
 import React from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header: React.FC = () => {
+  const { logout } = useAuth();
+
   const handleNavigationClick = (section: string) => {
     console.log(`Navigate to: ${section}`);
+  };
+
+  const handleLogout = () => {
+    logout();
   };
 
   return (
@@ -18,15 +25,26 @@ const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex space-x-8">
+          {/* Navigation & User Actions */}
+          <div className="flex items-center space-x-4">
+            <nav className="flex space-x-4">
+              <button
+                onClick={() => handleNavigationClick("all-activities")}
+                className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              >
+                全部活動
+              </button>
+            </nav>
+
+            {/* Logout Button */}
             <button
-              onClick={() => handleNavigationClick("all-activities")}
-              className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+              onClick={handleLogout}
+              className="text-gray-600 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 border border-gray-300 hover:border-gray-400"
+              aria-label="登出"
             >
-              全部活動
+              登出
             </button>
-          </nav>
+          </div>
         </div>
       </div>
     </header>

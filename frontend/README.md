@@ -20,23 +20,27 @@ MyMomentum 是一款通用的時間紀錄與習慣追蹤工具，幫助使用者
 ### 安裝步驟
 
 1. 複製專案
+
 ```bash
 git clone [your-repo-url]
 cd MyMomentum/frontend
 ```
 
 2. 安裝依賴
+
 ```bash
 npm install
 ```
 
 3. 設定環境變數
+
 ```bash
 # .env
 REACT_APP_API_URL=http://localhost:8080
 ```
 
 4. 啟動開發伺服器
+
 ```bash
 npm start
 ```
@@ -52,6 +56,7 @@ npm start
    - 開發環境：`http://localhost:3000`
    - 生產環境：您的網域
 5. 複製用戶端 ID 並更新 `src/index.tsx`：
+
 ```typescript
 <GoogleOAuthProvider clientId="your-client-id">
 ```
@@ -92,6 +97,7 @@ frontend/
 ## 🔄 API 端點
 
 ### Google 登入
+
 ```
 POST /auth/google
 Content-Type: application/json
