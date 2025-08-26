@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Activity } from "../types";
+import { getEmojiByCode } from "../constants/emoji";
 
 interface RecordPanelProps {
   activities: Activity[];
@@ -79,7 +80,7 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities }) => {
           <option value="">請選擇活動</option>
           {activities.map((activity) => (
             <option key={activity.id} value={activity.id}>
-              {activity.icon} {activity.name}
+              {getEmojiByCode(activity.icon)} {activity.name}
             </option>
           ))}
         </select>

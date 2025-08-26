@@ -23,8 +23,8 @@ public class ActivityRecord {
     @Column(name = "id", columnDefinition = "UUID")
     private UUID id;
 
-    @Column(name = "user_id", columnDefinition = "UUID")
-    private UUID userId;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "activity_id", nullable = false)

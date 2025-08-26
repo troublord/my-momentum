@@ -13,10 +13,10 @@ public interface ActivityRepository extends JpaRepository<Activity, UUID> {
     /**
      * Find all activities by user ID
      */
-    List<Activity> findByUserId(UUID userId);
+    List<Activity> findByUserId(Long userId);
     
     /**
      * Check if activity exists by user ID and name
      */
-    boolean existsByUserIdAndName(UUID userId, String name);
+    boolean existsByUserIdAndName(Long userId, String name);
 } 

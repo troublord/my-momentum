@@ -1,3 +1,5 @@
+import { ActivityIconType } from "../constants/emoji";
+
 export interface Activity {
   id: string;
   name: string;
@@ -5,7 +7,7 @@ export interface Activity {
   weeklyTime: number; // 分鐘
   targetTime: number; // 每週目標分鐘
   color: string;
-  icon: string;
+  icon: ActivityIconType;
 }
 
 export interface Summary {

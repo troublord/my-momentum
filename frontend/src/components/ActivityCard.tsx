@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Activity } from "../types";
+import { getEmojiByCode } from "../constants/emoji";
 
 interface ActivityCardProps {
   activity: Activity;
@@ -39,7 +40,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onClick }) => {
     >
       {/* 活動圖示和名稱 */}
       <div className="flex items-center mb-4">
-        <div className="text-2xl mr-3">{activity.icon}</div>
+        <div className="text-2xl mr-3">{getEmojiByCode(activity.icon)}</div>
         <h3 className="text-lg font-semibold text-gray-900 truncate">
           {activity.name}
         </h3>
