@@ -1,6 +1,6 @@
 # MyMomentum - Modern Activity Tracking Backend
 
-MyMomentum is a backend service built with Spring Boot, providing a RESTful API for activity tracking and user management.
+MyMomentum is a backend service built with Spring Boot, providing a RESTful API for activity tracking and user management. 
 
 - **Google OAuth login** for secure user authentication
 - **JWT-based authentication** for stateless, secure API access
