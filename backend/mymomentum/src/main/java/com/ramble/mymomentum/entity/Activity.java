@@ -1,12 +1,15 @@
 package com.ramble.mymomentum.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -25,23 +28,24 @@ public class Activity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Column(name = "goal_time")
-    private Integer goalTime; // Weekly goal time in seconds
+    @Min(0)
+    @Column(name = "target_time", nullable = false)
+    private Integer targetTime; // Weekly goal time in seconds
 
-    @Column(name = "color")
+    @Column(name = "color", length = 16)
     private String color;
 
-    @Column(name = "icon")
+    @Column(name = "icon", length = 16)
     private String icon;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 } 

@@ -46,7 +46,7 @@ public class ActivityService {
         Activity activity = new Activity();
         activity.setUserId(userId);
         activity.setName(request.getName());
-        activity.setGoalTime(request.getTargetTime() * 60); // Convert minutes to seconds
+        activity.setTargetTime(request.getTargetTime() * 60); // Convert minutes to seconds
         activity.setColor(request.getColor());
         activity.setIcon(request.getIcon());
         
@@ -123,7 +123,7 @@ public class ActivityService {
             activity.setName(name);
         }
         if (goalTime != null) {
-            activity.setGoalTime(goalTime);
+            activity.setTargetTime(goalTime);
         }
         if (color != null) {
             activity.setColor(color);
@@ -200,7 +200,7 @@ public class ActivityService {
         Integer weeklyTimeMinutes = weeklyTimeSeconds / 60;
 
         // Convert target time from seconds to minutes
-        Integer targetTimeMinutes = activity.getGoalTime() != null ? activity.getGoalTime() / 60 : 0;
+        Integer targetTimeMinutes = activity.getTargetTime() != null ? activity.getTargetTime() / 60 : 0;
 
         return new ActivityResponse(
             activity.getId().toString(),

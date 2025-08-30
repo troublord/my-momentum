@@ -5,9 +5,11 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.GenericGenerator;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.UUID;
 
 @Entity
@@ -30,21 +32,21 @@ public class ActivityRecord {
     @JoinColumn(name = "activity_id", nullable = false)
     private Activity activity;
 
-    @Column(name = "executed_at", nullable = false)
-    private LocalDateTime executedAt;
-
-    @Column(name = "duration", nullable = false)
-    private Integer duration; // Duration in seconds
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "source", nullable = false)
     private RecordSource source;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    @Column(name = "duration")  // Removed nullable = false since it can be NULL for in-progress LIVE records
+    private Integer duration; // Duration in seconds, NULL while LIVE is in-progress
+
+    @Column(name = "executed_at", nullable = false)
+    private Instant executedAt; // When it happened/started (tz-aware)
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 } 
