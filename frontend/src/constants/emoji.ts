@@ -22,3 +22,4 @@ export const getEmojiByCode = (code: ActivityIconType): string => {
 export const getAvailableIconCodes = (): ActivityIconType[] => {
   return Object.keys(ACTIVITY_ICONS) as ActivityIconType[];
 };
+
