@@ -192,8 +192,8 @@ public class ActivityService {
      */
     private ActivityResponse convertToActivityResponse(Activity activity) {
         // Calculate total time (in minutes)
-        Integer totalTimeSeconds = activityRecordRepository.getTotalTimeByActivityId(activity.getId());
-        Integer totalTimeMinutes = totalTimeSeconds / 60;
+        Long totalTimeSeconds = activityRecordRepository.getTotalTimeByActivityId(activity.getId());
+        Long totalTimeMinutes = totalTimeSeconds / 60;
 
         // Calculate weekly time (in minutes) - from start of current week
         Instant weekStart = Instant.now()
@@ -201,20 +201,20 @@ public class ActivityService {
                 .truncatedTo(ChronoUnit.DAYS)
                 .with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
                 .toInstant();
-        Integer weeklyTimeSeconds = activityRecordRepository.getWeeklyTimeByActivityId(activity.getId(), weekStart);
-        Integer weeklyTimeMinutes = weeklyTimeSeconds / 60;
+        Long weeklyTimeSeconds = activityRecordRepository.getWeeklyTimeByActivityId(activity.getId(), weekStart);
+        Long weeklyTimeMinutes = weeklyTimeSeconds / 60;
 
         // Convert target time from seconds to minutes
         Integer targetTimeMinutes = activity.getTargetTime() != null ? activity.getTargetTime() / 60 : 0;
 
-        return new ActivityResponse(
-            activity.getId().toString(),
-            activity.getName(),
-            totalTimeMinutes,
-            weeklyTimeMinutes,
-            targetTimeMinutes,
-            activity.getColor(),
-            activity.getIcon()
+                return new ActivityResponse(
+                activity.getId().toString(),
+                activity.getName(),
+                totalTimeMinutes.intValue(),
+                weeklyTimeMinutes.intValue(),
+                targetTimeMinutes,
+                activity.getColor(),
+                activity.getIcon()
         );
     }
 } 

@@ -98,7 +98,7 @@ public class ActivityController {
     })
     public ResponseEntity<ActivityResponse> getActivity(
             Authentication authentication,
-            @Parameter(description = "活動ID") @PathVariable UUID id) {
+            @Parameter(description = "活動ID") @PathVariable("id") UUID id) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Fetching activity: {} for user: {}", id, userId);
@@ -128,7 +128,7 @@ public class ActivityController {
     })
     public ResponseEntity<ActivityResponse> updateActivity(
             Authentication authentication,
-            @Parameter(description = "活動ID") @PathVariable UUID id,
+            @Parameter(description = "活動ID") @PathVariable("id") UUID id,
             @Valid @RequestBody UpdateActivityRequest request) {
         
         Long userId = (Long) authentication.getPrincipal();
@@ -154,7 +154,7 @@ public class ActivityController {
     })
     public ResponseEntity<Void> deleteActivity(
             Authentication authentication,
-            @Parameter(description = "活動ID") @PathVariable UUID id) {
+            @Parameter(description = "活動ID") @PathVariable("id") UUID id) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Deleting activity: {} for user: {}", id, userId);

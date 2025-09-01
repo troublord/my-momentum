@@ -89,7 +89,7 @@ public class StatisticsController {
     public ResponseEntity<ActivityStatsSimple> getActivityStatistics(
             Authentication authentication,
             @Parameter(description = "活動ID")
-            @PathVariable String activityId) {
+            @PathVariable("activityId") String activityId) {
         
         Long userId = (Long) authentication.getPrincipal();
         UUID activityUuid = UUID.fromString(activityId);
@@ -118,7 +118,7 @@ public class StatisticsController {
     public ResponseEntity<ActivityStatistics> getActivityStatisticsDetailed(
             Authentication authentication,
             @Parameter(description = "活動ID")
-            @PathVariable String activityId,
+            @PathVariable("activityId") String activityId,
             @Parameter(description = "時間週期：week, month, year")
             @RequestParam(required = false) String period) {
         

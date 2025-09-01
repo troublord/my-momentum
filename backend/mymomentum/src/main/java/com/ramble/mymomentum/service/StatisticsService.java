@@ -4,6 +4,7 @@ import com.ramble.mymomentum.dto.ActivityStatistics;
 import com.ramble.mymomentum.dto.ActivityStatsSimple;
 import com.ramble.mymomentum.dto.Summary;
 import com.ramble.mymomentum.dto.WeeklyTrendItem;
+import org.springframework.data.domain.PageRequest;
 import com.ramble.mymomentum.entity.Activity;
 import com.ramble.mymomentum.repository.ActivityRepository;
 import com.ramble.mymomentum.repository.ActivityRecordRepository;
@@ -80,19 +81,19 @@ public class StatisticsService {
         }
 
         // Calculate all-time total
-        Integer totalTimeSeconds = activityRecordRepository.getTotalTimeByActivityId(activityId);
-        Integer totalTimeMinutes = totalTimeSeconds / 60;
+        Long totalTimeSeconds = activityRecordRepository.getTotalTimeByActivityId(activityId);
+        Long totalTimeMinutes = totalTimeSeconds / 60;
 
         // Calculate current week time
         PeriodInfo currentWeek = calculatePeriodBounds("week");
-        Integer weeklyTimeMinutes = activityRecordRepository.getActivityMinutesInRange(
+        Long weeklyTimeMinutes = activityRecordRepository.getActivityMinutesInRange(
                 activityId, currentWeek.start(), currentWeek.end());
 
         // Calculate completion rate for current week
         Integer weeklyTarget = activity.getTargetTime() != null ? activity.getTargetTime() / 60 : 0;
         Double completionRate = weeklyTarget > 0 ? (double) weeklyTimeMinutes / weeklyTarget : 0.0;
 
-        return new ActivityStatsSimple(totalTimeMinutes, weeklyTimeMinutes, completionRate);
+        return new ActivityStatsSimple(totalTimeMinutes.intValue(), weeklyTimeMinutes.intValue(), completionRate);
     }
 
     /**
@@ -114,7 +115,7 @@ public class StatisticsService {
         PeriodInfo periodInfo = calculatePeriodBounds(period);
         
         // Calculate total time for the period
-        Integer totalTimeMinutes = activityRecordRepository.getActivityMinutesInRange(
+        Long totalTimeMinutes = activityRecordRepository.getActivityMinutesInRange(
                 activityId, periodInfo.start(), periodInfo.end());
 
         // Get weekly target
@@ -141,7 +142,7 @@ public class StatisticsService {
                 period,
                 periodStart,
                 periodEnd,
-                totalTimeMinutes,
+                totalTimeMinutes.intValue(),
                 weeklyTargetMinutes,
                 periodInfo.scale(),
                 completionRate,
@@ -172,13 +173,14 @@ public class StatisticsService {
 
     private Summary calculateSummary(Long userId, PeriodInfo periodInfo) {
         // 1. Calculate total time
-        Integer totalMinutes = activityRecordRepository.getTotalMinutesInRange(
+        Long totalMinutes = activityRecordRepository.getTotalMinutesInRange(
                 userId, periodInfo.start(), periodInfo.end());
 
         // 2. Find most frequent activity
         String mostFrequentActivity = null;
-        UUID topActivityId = activityRecordRepository.findTopActivityByDuration(
-                userId, periodInfo.start(), periodInfo.end());
+        List<UUID> topActivityIds = activityRecordRepository.findTopActivityByDurationIds(
+                userId, periodInfo.start(), periodInfo.end(), PageRequest.of(0, 1));
+        UUID topActivityId = !topActivityIds.isEmpty() ? topActivityIds.get(0) : null;
         
         if (topActivityId != null) {
             Activity activity = activityRepository.findById(topActivityId).orElse(null);
@@ -196,7 +198,7 @@ public class StatisticsService {
             completionRate = totalMinutes / scaledTarget;
         }
 
-        return new Summary(totalMinutes, mostFrequentActivity, completionRate);
+        return new Summary(totalMinutes.intValue(), mostFrequentActivity, completionRate);
     }
 
     private PeriodInfo calculatePeriodBounds(String period) {

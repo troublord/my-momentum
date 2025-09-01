@@ -28,8 +28,11 @@ public class ActivityRecord {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Column(name = "activity_id", nullable = false)
+    private UUID activityId;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "activity_id", nullable = false)
+    @JoinColumn(name = "activity_id", insertable = false, updatable = false)
     private Activity activity;
 
     @Enumerated(EnumType.STRING)
