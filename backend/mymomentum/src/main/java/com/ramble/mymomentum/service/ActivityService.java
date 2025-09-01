@@ -11,7 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
@@ -194,8 +196,11 @@ public class ActivityService {
         Integer totalTimeMinutes = totalTimeSeconds / 60;
 
         // Calculate weekly time (in minutes) - from start of current week
-        LocalDateTime weekStart = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
-                .with(java.time.DayOfWeek.MONDAY);
+        Instant weekStart = Instant.now()
+                .atZone(ZoneOffset.UTC)
+                .truncatedTo(ChronoUnit.DAYS)
+                .with(TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                .toInstant();
         Integer weeklyTimeSeconds = activityRecordRepository.getWeeklyTimeByActivityId(activity.getId(), weekStart);
         Integer weeklyTimeMinutes = weeklyTimeSeconds / 60;
 
