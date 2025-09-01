@@ -6,8 +6,9 @@ export const useActivities = () => {
 
   return {
     // 獲取所有活動
-    getActivities: () => {
-      return api.get<Activity[]>("/api/activities");
+    getActivities: async () => {
+      const response = await api.get<{ data: Activity[] }>("/api/activities");
+      return response?.data || null;
     },
 
     // 獲取單個活動

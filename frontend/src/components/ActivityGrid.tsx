@@ -7,12 +7,16 @@ interface ActivityGridProps {
   activities: Activity[];
   onActivityClick?: (activity: Activity) => void;
   onAddActivity?: () => void;
+  onEditActivity?: (activity: Activity) => void;
+  onDeleteActivity?: (activity: Activity) => void;
 }
 
 const ActivityGrid: React.FC<ActivityGridProps> = ({
   activities,
   onActivityClick,
   onAddActivity,
+  onEditActivity,
+  onDeleteActivity,
 }) => {
   const handleActivityClick = (activity: Activity) => {
     if (onActivityClick) {
@@ -33,6 +37,8 @@ const ActivityGrid: React.FC<ActivityGridProps> = ({
           key={activity.id}
           activity={activity}
           onClick={() => handleActivityClick(activity)}
+          onEdit={onEditActivity}
+          onDelete={onDeleteActivity}
         />
       ))}
       <AddActivityCard onClick={handleAddActivity} />

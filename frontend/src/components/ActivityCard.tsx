@@ -5,9 +5,11 @@ import { getEmojiByCode } from "../constants/emoji";
 interface ActivityCardProps {
   activity: Activity;
   onClick?: () => void;
+  onEdit?: (activity: Activity) => void;
+  onDelete?: (activity: Activity) => void;
 }
 
-const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onClick }) => {
+const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onClick, onEdit, onDelete }) => {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const formatTime = (minutes: number): string => {
@@ -31,6 +33,20 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onClick }) => {
     }
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止觸發卡片點擊事件
+    if (onEdit) {
+      onEdit(activity);
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 防止觸發卡片點擊事件
+    if (onDelete) {
+      onDelete(activity);
+    }
+  };
+
   return (
     <div
       className="card cursor-pointer group relative"
@@ -39,11 +55,37 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onClick }) => {
       onMouseLeave={() => setShowTooltip(false)}
     >
       {/* 活動圖示和名稱 */}
-      <div className="flex items-center mb-4">
-        <div className="text-2xl mr-3">{getEmojiByCode(activity.icon)}</div>
-        <h3 className="text-lg font-semibold text-gray-900 truncate">
-          {activity.name}
-        </h3>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center min-w-0 flex-1">
+          <div className="text-2xl mr-3">{getEmojiByCode(activity.icon)}</div>
+          <h3 className="text-lg font-semibold text-gray-900 truncate">
+            {activity.name}
+          </h3>
+        </div>
+        
+        {/* 操作按鈕 */}
+        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button
+            onClick={handleEdit}
+            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded"
+            title="編輯活動"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+          </button>
+          <button
+            onClick={handleDelete}
+            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded"
+            title="刪除活動"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* 時間統計 */}
