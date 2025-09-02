@@ -6,8 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -36,7 +38,8 @@ public class ActivityRecord {
     private Activity activity;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "source", nullable = false)
+    @Column(name = "source", nullable = false, columnDefinition = "record_source")
+    @JdbcType(PostgreSQLEnumJdbcType.class)   // 關鍵：明確指定 PG enum 的 JDBC 型別
     private RecordSource source;
 
     @Column(name = "duration")  // Removed nullable = false since it can be NULL for in-progress LIVE records

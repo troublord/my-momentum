@@ -268,6 +268,285 @@ Authorization: Bearer <token>
 
 ---
 
+## 📝 活動記錄管理 API
+
+### 1. 創建活動記錄
+
+**端點：** `POST /api/records`
+
+**描述：** 為當前用戶創建新的活動記錄（LIVE或MANUAL）
+
+**請求標頭：**
+```
+Content-Type: application/json
+Authorization: Bearer <token>
+```
+
+**請求體：**
+```json
+{
+  "activityId": "550e8400-e29b-41d4-a716-446655440000",
+  "source": "LIVE",
+  "duration": null,
+  "executedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**參數說明：**
+- `activityId` (UUID, required): 活動ID
+- `source` (string, required): 記錄來源 - "LIVE"（實時記錄）或 "MANUAL"（手動記錄）
+- `duration` (integer, optional): 持續時間（秒）- MANUAL記錄必需，LIVE記錄必須為null
+- `executedAt` (string, required): 執行時間（ISO 8601格式）
+
+**響應 (201 Created)：**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "activityId": "550e8400-e29b-41d4-a716-446655440000",
+  "source": "LIVE",
+  "duration": null,
+  "executedAt": "2024-01-15T10:30:00Z",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**錯誤響應：**
+- `400 Bad Request`: 請求參數錯誤或驗證失敗
+- `404 Not Found`: 活動不存在
+- `409 Conflict`: 該活動已有正在進行的LIVE記錄
+
+---
+
+### 2. 完成LIVE記錄
+
+**端點：** `PATCH /api/records/{id}/finish`
+
+**描述：** 結束正在進行的LIVE記錄並設置持續時間
+
+**路徑參數：**
+- `id` (UUID): 記錄ID
+
+**請求標頭：**
+```
+Content-Type: application/json
+Authorization: Bearer <token>
+```
+
+**請求體：**
+```json
+{
+  "endAt": "2024-01-15T11:30:00Z"
+}
+```
+
+**參數說明：**
+- `endAt` (string, required): 結束時間（ISO 8601格式）
+
+**響應 (200 OK)：**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "activityId": "550e8400-e29b-41d4-a716-446655440000",
+  "source": "LIVE",
+  "duration": 3600,
+  "executedAt": "2024-01-15T10:30:00Z",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T11:30:00Z"
+}
+```
+
+**錯誤響應：**
+- `400 Bad Request`: 請求參數錯誤
+- `404 Not Found`: 記錄不存在
+- `409 Conflict`: 記錄不是正在進行的LIVE記錄
+
+---
+
+### 3. 更新記錄
+
+**端點：** `PUT /api/records/{id}`
+
+**描述：** 更新現有的活動記錄（僅限MANUAL記錄或已完成的LIVE記錄）
+
+**路徑參數：**
+- `id` (UUID): 記錄ID
+
+**請求標頭：**
+```
+Content-Type: application/json
+Authorization: Bearer <token>
+```
+
+**請求體：**
+```json
+{
+  "activityId": "550e8400-e29b-41d4-a716-446655440000",
+  "source": "MANUAL",
+  "duration": 1800,
+  "executedAt": "2024-01-15T09:00:00Z"
+}
+```
+
+**參數說明：**
+- `activityId` (UUID, required): 活動ID
+- `source` (string, required): 記錄來源
+- `duration` (integer, optional): 持續時間（秒）
+- `executedAt` (string, required): 執行時間
+
+**響應 (200 OK)：**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "activityId": "550e8400-e29b-41d4-a716-446655440000",
+  "source": "MANUAL",
+  "duration": 1800,
+  "executedAt": "2024-01-15T09:00:00Z",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T12:00:00Z"
+}
+```
+
+**錯誤響應：**
+- `400 Bad Request`: 請求參數錯誤或驗證失敗
+- `404 Not Found`: 記錄不存在
+- `409 Conflict`: 不能更新正在進行的LIVE記錄
+
+---
+
+### 4. 刪除記錄
+
+**端點：** `DELETE /api/records/{id}`
+
+**描述：** 刪除現有的活動記錄
+
+**路徑參數：**
+- `id` (UUID): 記錄ID
+
+**請求標頭：**
+```
+Authorization: Bearer <token>
+```
+
+**響應 (204 No Content)：** 無內容
+
+**錯誤響應：**
+- `404 Not Found`: 記錄不存在
+
+---
+
+### 5. 獲取單一記錄
+
+**端點：** `GET /api/records/{id}`
+
+**描述：** 根據ID獲取單一活動記錄
+
+**路徑參數：**
+- `id` (UUID): 記錄ID
+
+**請求標頭：**
+```
+Authorization: Bearer <token>
+```
+
+**響應 (200 OK)：**
+```json
+{
+  "id": "550e8400-e29b-41d4-a716-446655440001",
+  "activityId": "550e8400-e29b-41d4-a716-446655440000",
+  "source": "MANUAL",
+  "duration": 1800,
+  "executedAt": "2024-01-15T09:00:00Z",
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+**錯誤響應：**
+- `404 Not Found`: 記錄不存在
+
+---
+
+### 6. 獲取記錄列表
+
+**端點：** `GET /api/records`
+
+**描述：** 獲取用戶的活動記錄列表，支持多種過濾條件
+
+**查詢參數：**
+- `activityId` (UUID, optional): 活動ID過濾
+- `from` (string, optional): 開始時間過濾（ISO 8601格式）
+- `to` (string, optional): 結束時間過濾（ISO 8601格式）
+- `source` (string, optional): 記錄來源過濾 - "LIVE" 或 "MANUAL"
+- `running` (boolean, optional): 僅顯示正在進行的LIVE記錄
+- `page` (integer, optional): 頁碼（默認: 0）
+- `size` (integer, optional): 每頁大小（默認: 20）
+
+**請求標頭：**
+```
+Authorization: Bearer <token>
+```
+
+**響應 (200 OK)：**
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "activityId": "550e8400-e29b-41d4-a716-446655440000",
+      "source": "MANUAL",
+      "duration": 1800,
+      "executedAt": "2024-01-15T09:00:00Z",
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "total": 1
+}
+```
+
+---
+
+### 7. 獲取正在進行的記錄
+
+**端點：** `GET /api/records/running`
+
+**描述：** 獲取用戶正在進行的LIVE記錄列表
+
+**查詢參數：**
+- `activityId` (UUID, optional): 活動ID過濾
+- `page` (integer, optional): 頁碼（默認: 0）
+- `size` (integer, optional): 每頁大小（默認: 20）
+
+**請求標頭：**
+```
+Authorization: Bearer <token>
+```
+
+**響應 (200 OK)：**
+```json
+{
+  "data": [
+    {
+      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "activityId": "550e8400-e29b-41d4-a716-446655440000",
+      "source": "LIVE",
+      "duration": null,
+      "executedAt": "2024-01-15T10:30:00Z",
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "page": 0,
+  "size": 20,
+  "total": 1
+}
+```
+
+---
+
 ## 📈 統計數據 API
 
 ### 1. 獲取統計摘要
@@ -489,6 +768,56 @@ Authorization: Bearer <token>
 }
 ```
 
+### RecordResponse
+```json
+{
+  "id": "string (UUID)",
+  "activityId": "string (UUID)",
+  "source": "string (LIVE|MANUAL)",
+  "duration": "integer (seconds) | null",
+  "executedAt": "string (ISO 8601)",
+  "createdAt": "string (ISO 8601)",
+  "updatedAt": "string (ISO 8601)"
+}
+```
+
+### PagedRecordResponse
+```json
+{
+  "data": "RecordResponse[]",
+  "page": "integer",
+  "size": "integer",
+  "total": "integer"
+}
+```
+
+### RecordCreateRequest
+```json
+{
+  "activityId": "string (UUID)",
+  "source": "string (LIVE|MANUAL)",
+  "duration": "integer (seconds) | null",
+  "executedAt": "string (ISO 8601)"
+}
+```
+
+### RecordFinishRequest
+```json
+{
+  "endAt": "string (ISO 8601)"
+}
+```
+
+### RecordUpdateRequest
+```json
+{
+  "activityId": "string (UUID)",
+  "source": "string (LIVE|MANUAL)",
+  "duration": "integer (seconds) | null",
+  "executedAt": "string (ISO 8601)"
+}
+```
+
 ---
 
 ## 🔧 錯誤處理
@@ -579,6 +908,63 @@ const getWeeklyTrend = async (activityId: string | null, token: string) => {
   });
   return response.json();
 };
+
+// 創建活動記錄
+const createRecord = async (recordData: any, token: string) => {
+  const response = await fetch('/api/records', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(recordData)
+  });
+  return response.json();
+};
+
+// 完成LIVE記錄
+const finishRecord = async (recordId: string, endAt: string, token: string) => {
+  const response = await fetch(`/api/records/${recordId}/finish`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ endAt })
+  });
+  return response.json();
+};
+
+// 獲取記錄列表
+const getRecords = async (filters: any, token: string) => {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== null && value !== undefined) {
+      params.append(key, value.toString());
+    }
+  });
+  
+  const response = await fetch(`/api/records?${params}`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// 獲取正在進行的記錄
+const getRunningRecords = async (activityId: string | null, token: string) => {
+  const url = activityId 
+    ? `/api/records/running?activityId=${activityId}`
+    : '/api/records/running';
+  
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
 ```
 
 ---
@@ -603,6 +989,13 @@ const getWeeklyTrend = async (activityId: string | null, token: string) => {
 | GET | `/api/activities/{id}` | 獲取單一活動 | ✅ |
 | PUT | `/api/activities/{id}` | 更新活動 | ✅ |
 | DELETE | `/api/activities/{id}` | 刪除活動 | ✅ |
+| POST | `/api/records` | 創建活動記錄 | ✅ |
+| PATCH | `/api/records/{id}/finish` | 完成LIVE記錄 | ✅ |
+| PUT | `/api/records/{id}` | 更新記錄 | ✅ |
+| DELETE | `/api/records/{id}` | 刪除記錄 | ✅ |
+| GET | `/api/records/{id}` | 獲取單一記錄 | ✅ |
+| GET | `/api/records` | 獲取記錄列表 | ✅ |
+| GET | `/api/records/running` | 獲取正在進行的記錄 | ✅ |
 | GET | `/api/statistics/summary` | 獲取統計摘要 | ✅ |
 | GET | `/api/statistics/activities/{id}` | 獲取活動統計（簡化） | ✅ |
 | GET | `/api/statistics/activities/{id}/detailed` | 獲取活動統計（詳細） | ✅ |
