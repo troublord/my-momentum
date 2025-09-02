@@ -126,10 +126,34 @@ export const useApi = () => {
       }
   }, [headers, handleApiError]);
 
+  const patch = useCallback(async <T>(endpoint: string, data?: any): Promise<T | null> => {
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          method: "PATCH",
+          headers,
+          body: data ? JSON.stringify(data) : undefined,
+        });
+        if (res.status === 401) {
+          localStorage.removeItem("mm_access_token");
+          window.location.href = "/";
+          return null;
+        }
+        if (!res.ok) {
+          throw new Error(`API Error: ${res.statusText}`);
+        }
+        return res.json() as Promise<T>;
+      } catch (error) {
+        console.error(`PATCH ${endpoint} failed:`, error);
+        handleApiError(error, endpoint, 'PATCH');
+        throw error;
+      }
+  }, [headers, handleApiError]);
+
   return {
     get,
     post,
     put,
+    patch,
     delete: deleteMethod,
   };
 };

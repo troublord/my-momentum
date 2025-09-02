@@ -36,7 +36,7 @@ const SummarySection: React.FC<SummarySectionProps> = ({ summary }) => {
         {/* 進度完成率 */}
         <div className="text-center">
           <div className="text-3xl font-bold text-success-600 mb-2">
-            {summary.completionRate}%
+            {Math.round(summary.completionRate * 100)}%
           </div>
           <div className="text-sm text-gray-600">進度完成率</div>
         </div>

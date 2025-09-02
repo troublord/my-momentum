@@ -16,9 +16,4 @@ export interface Summary {
   completionRate: number;
 }
 
-export interface RecordEntry {
-  activityId: string;
-  duration: number; // 分鐘
-  date: string;
-  type: "realtime" | "manual";
-}
+

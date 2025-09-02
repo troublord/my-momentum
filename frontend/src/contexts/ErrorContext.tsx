@@ -36,6 +36,12 @@ interface ErrorProviderProps {
 export const ErrorProvider: React.FC<ErrorProviderProps> = ({ children }) => {
   const [errors, setErrors] = useState<ErrorItem[]>([]);
 
+  const hideError = useCallback((id: string) => {
+    setErrors(prev => prev.map(error => 
+      error.id === id ? { ...error, isVisible: false } : error
+    ));
+  }, []);
+
   const addError = useCallback((errorData: Omit<ErrorItem, 'id' | 'timestamp' | 'isVisible'>) => {
     const newError: ErrorItem = {
       ...errorData,
@@ -52,16 +58,10 @@ export const ErrorProvider: React.FC<ErrorProviderProps> = ({ children }) => {
         hideError(newError.id);
       }, newError.autoHideDelay);
     }
-  }, []);
+  }, [hideError]);
 
   const removeError = useCallback((id: string) => {
     setErrors(prev => prev.filter(error => error.id !== id));
-  }, []);
-
-  const hideError = useCallback((id: string) => {
-    setErrors(prev => prev.map(error => 
-      error.id === id ? { ...error, isVisible: false } : error
-    ));
   }, []);
 
   const clearAllErrors = useCallback(() => {

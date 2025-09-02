@@ -66,7 +66,8 @@ const App: React.FC = () => {
 
       fetchData();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Functions are stable due to useCallback in services, including them would cause infinite loops
 
   const handleActivityClick = (activity: Activity) => {
     console.log("點擊活動:", activity.name);
@@ -179,7 +180,37 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="hidden lg:block">
-            <RecordPanel activities={activities} />
+            <RecordPanel 
+              activities={activities} 
+              onCreated={async () => {
+                // Refresh both activities and summary data after record creation
+                try {
+                  const [activitiesData, summaryData] = await Promise.all([
+                    getActivities(),
+                    getSummary(),
+                  ]);
+                  
+                  if (activitiesData) {
+                    console.log('🔄 Refreshed activities after record creation:', activitiesData);
+                    setActivities(activitiesData);
+                  }
+                  
+                  if (summaryData) {
+                    console.log('📊 Refreshed summary after record creation:', summaryData);
+                    setSummary(summaryData);
+                  }
+                } catch (error) {
+                  console.error("Failed to refresh data:", error);
+                  addError({
+                    type: 'warning',
+                    title: '資料更新失敗',
+                    message: '無法更新統計資料，請重新整理頁面',
+                    autoHide: true,
+                    autoHideDelay: 5000,
+                  });
+                }
+              }}
+            />
           </div>
         </div>
       </div>
