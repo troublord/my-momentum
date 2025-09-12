@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Header from "./components/Header";
 import SummarySection from "./components/SummarySection";
 import ActivityGrid from "./components/ActivityGrid";
@@ -7,6 +8,7 @@ import CreateActivityModal from "./components/CreateActivityModal";
 import EditActivityModal from "./components/EditActivityModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import ErrorContainer from "./components/ErrorContainer";
+import ActivityDetailPage from "./pages/ActivityDetailPage";
 import { Activity, Summary } from "./types";
 import IntroPage from "./components/IntroPage";
 import { useAuth } from "./contexts/AuthContext";
@@ -14,24 +16,28 @@ import { useActivities } from "./services/activities";
 import { useStatistics } from "./services/statistics";
 import { useError } from "./contexts/ErrorContext";
 
-const App: React.FC = () => {
+const HomePage: React.FC = () => {
+  const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const { getActivities, createActivity, updateActivity, deleteActivity } = useActivities();
+  const { getActivities, createActivity, updateActivity, deleteActivity } =
+    useActivities();
   const { getSummary } = useStatistics();
   const { addError } = useError();
 
   const [activities, setActivities] = useState<Activity[]>([]);
-  
+
   // Debug: Log activities whenever they change
   useEffect(() => {
-    console.log('🔄 Activities State Updated:', activities);
+    console.log("🔄 Activities State Updated:", activities);
   }, [activities]);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+    null
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -43,19 +49,19 @@ const App: React.FC = () => {
           ]);
 
           if (activitiesData) {
-            console.log('📊 Fetched Activities:', activitiesData);
+            console.log("📊 Fetched Activities:", activitiesData);
             setActivities(activitiesData);
           }
           if (summaryData) {
-            console.log('📈 Fetched Summary:', summaryData);
+            console.log("📈 Fetched Summary:", summaryData);
             setSummary(summaryData);
           }
         } catch (error) {
           console.error("Failed to fetch data:", error);
           addError({
-            type: 'error',
-            title: '載入資料失敗',
-            message: '無法載入應用程式資料，請重新整理頁面再試',
+            type: "error",
+            title: "載入資料失敗",
+            message: "無法載入應用程式資料，請重新整理頁面再試",
             autoHide: true,
             autoHideDelay: 5000,
           });
@@ -71,7 +77,7 @@ const App: React.FC = () => {
 
   const handleActivityClick = (activity: Activity) => {
     console.log("點擊活動:", activity.name);
-    // 這裡可以導向活動詳細頁
+    navigate(`/activities/${activity.id}`);
   };
 
   const handleAddActivity = () => {
@@ -82,15 +88,15 @@ const App: React.FC = () => {
     try {
       const createdActivity = await createActivity(newActivity);
       if (createdActivity) {
-        console.log('✨ Created New Activity:', createdActivity);
+        console.log("✨ Created New Activity:", createdActivity);
         setActivities([...activities, createdActivity]);
       }
     } catch (error) {
       console.error("Failed to create activity:", error);
       addError({
-        type: 'error',
-        title: '創建活動失敗',
-        message: '無法創建新活動，請稍後再試',
+        type: "error",
+        title: "創建活動失敗",
+        message: "無法創建新活動，請稍後再試",
         autoHide: true,
         autoHideDelay: 5000,
       });
@@ -102,21 +108,26 @@ const App: React.FC = () => {
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateActivity = async (id: string, updatedFields: Partial<Activity>) => {
+  const handleUpdateActivity = async (
+    id: string,
+    updatedFields: Partial<Activity>
+  ) => {
     try {
       const updatedActivity = await updateActivity(id, updatedFields);
       if (updatedActivity) {
-        console.log('✏️ Updated Activity:', updatedActivity);
-        setActivities(activities.map(activity => 
-          activity.id === id ? updatedActivity : activity
-        ));
+        console.log("✏️ Updated Activity:", updatedActivity);
+        setActivities(
+          activities.map((activity) =>
+            activity.id === id ? updatedActivity : activity
+          )
+        );
       }
     } catch (error) {
       console.error("Failed to update activity:", error);
       addError({
-        type: 'error',
-        title: '更新活動失敗',
-        message: '無法更新活動資訊，請稍後再試',
+        type: "error",
+        title: "更新活動失敗",
+        message: "無法更新活動資訊，請稍後再試",
         autoHide: true,
         autoHideDelay: 5000,
       });
@@ -130,17 +141,19 @@ const App: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!selectedActivity) return;
-    
+
     try {
       await deleteActivity(selectedActivity.id);
-      console.log('🗑️ Deleted Activity:', selectedActivity);
-      setActivities(activities.filter(activity => activity.id !== selectedActivity.id));
+      console.log("🗑️ Deleted Activity:", selectedActivity);
+      setActivities(
+        activities.filter((activity) => activity.id !== selectedActivity.id)
+      );
     } catch (error) {
       console.error("Failed to delete activity:", error);
       addError({
-        type: 'error',
-        title: '刪除活動失敗',
-        message: '無法刪除活動，請稍後再試',
+        type: "error",
+        title: "刪除活動失敗",
+        message: "無法刪除活動，請稍後再試",
         autoHide: true,
         autoHideDelay: 5000,
       });
@@ -180,8 +193,8 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="hidden lg:block">
-            <RecordPanel 
-              activities={activities} 
+            <RecordPanel
+              activities={activities}
               onCreated={async () => {
                 // Refresh both activities and summary data after record creation
                 try {
@@ -189,22 +202,28 @@ const App: React.FC = () => {
                     getActivities(),
                     getSummary(),
                   ]);
-                  
+
                   if (activitiesData) {
-                    console.log('🔄 Refreshed activities after record creation:', activitiesData);
+                    console.log(
+                      "🔄 Refreshed activities after record creation:",
+                      activitiesData
+                    );
                     setActivities(activitiesData);
                   }
-                  
+
                   if (summaryData) {
-                    console.log('📊 Refreshed summary after record creation:', summaryData);
+                    console.log(
+                      "📊 Refreshed summary after record creation:",
+                      summaryData
+                    );
                     setSummary(summaryData);
                   }
                 } catch (error) {
                   console.error("Failed to refresh data:", error);
                   addError({
-                    type: 'warning',
-                    title: '資料更新失敗',
-                    message: '無法更新統計資料，請重新整理頁面',
+                    type: "warning",
+                    title: "資料更新失敗",
+                    message: "無法更新統計資料，請重新整理頁面",
                     autoHide: true,
                     autoHideDelay: 5000,
                   });
@@ -233,6 +252,15 @@ const App: React.FC = () => {
       />
       <ErrorContainer />
     </div>
+  );
+};
+
+const App: React.FC = () => {
+  return (
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/activities/:id" element={<ActivityDetailPage />} />
+    </Routes>
   );
 };
 

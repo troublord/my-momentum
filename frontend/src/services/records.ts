@@ -1,11 +1,11 @@
-import { 
-  ActivityRecord, 
-  PageResponse, 
-  CreateRecordReq, 
-  FinishLiveReq, 
-  UpdateRecordReq, 
+import {
+  ActivityRecord,
+  PageResponse,
+  CreateRecordReq,
+  FinishLiveReq,
+  UpdateRecordReq,
   ListRecordQuery,
-  UUID 
+  UUID,
 } from "../types/records";
 import { useApi } from "./api";
 
@@ -14,7 +14,10 @@ export const useRecords = () => {
 
   return {
     // Helper functions for RecordPanel
-    createLiveRecord: async (activityId: string, executedAtISO: string): Promise<ActivityRecord | null> => {
+    createLiveRecord: async (
+      activityId: string,
+      executedAtISO: string
+    ): Promise<ActivityRecord | null> => {
       const req: CreateRecordReq = {
         activityId,
         source: "LIVE",
@@ -24,7 +27,10 @@ export const useRecords = () => {
       return api.post<ActivityRecord>("/api/records", req);
     },
 
-    finishLiveRecord: async (id: string, endAtISO: string): Promise<ActivityRecord | null> => {
+    finishLiveRecord: async (
+      id: string,
+      endAtISO: string
+    ): Promise<ActivityRecord | null> => {
       const req: FinishLiveReq = {
         endAt: endAtISO,
       };
@@ -32,8 +38,8 @@ export const useRecords = () => {
     },
 
     createManualRecord: async (
-      activityId: string, 
-      minutes: number, 
+      activityId: string,
+      minutes: number,
       executedAtISO: string
     ): Promise<ActivityRecord | null> => {
       const req: CreateRecordReq = {
@@ -46,15 +52,23 @@ export const useRecords = () => {
     },
 
     // Full API methods
-    createRecord: async (req: CreateRecordReq): Promise<ActivityRecord | null> => {
+    createRecord: async (
+      req: CreateRecordReq
+    ): Promise<ActivityRecord | null> => {
       return api.post<ActivityRecord>("/api/records", req);
     },
 
-    finishRecord: async (id: UUID, req: FinishLiveReq): Promise<ActivityRecord | null> => {
+    finishRecord: async (
+      id: UUID,
+      req: FinishLiveReq
+    ): Promise<ActivityRecord | null> => {
       return api.patch<ActivityRecord>(`/api/records/${id}/finish`, req);
     },
 
-    updateRecord: async (id: UUID, req: UpdateRecordReq): Promise<ActivityRecord | null> => {
+    updateRecord: async (
+      id: UUID,
+      req: UpdateRecordReq
+    ): Promise<ActivityRecord | null> => {
       return api.put<ActivityRecord>(`/api/records/${id}`, req);
     },
 
@@ -66,33 +80,46 @@ export const useRecords = () => {
       return api.get<ActivityRecord>(`/api/records/${id}`);
     },
 
-    listRecords: async (query?: ListRecordQuery): Promise<PageResponse<ActivityRecord> | null> => {
+    listRecords: async (
+      query?: ListRecordQuery
+    ): Promise<PageResponse<ActivityRecord> | null> => {
       const params = new URLSearchParams();
-      
-      if (query?.activityId) params.append('activityId', query.activityId);
-      if (query?.from) params.append('from', query.from);
-      if (query?.to) params.append('to', query.to);
-      if (query?.source) params.append('source', query.source);
-      if (query?.running !== undefined) params.append('running', query.running.toString());
-      if (query?.page !== undefined) params.append('page', query.page.toString());
-      if (query?.size !== undefined) params.append('size', query.size.toString());
+
+      if (query?.activityId) params.append("activityId", query.activityId);
+      if (query?.from) params.append("from", query.from);
+      if (query?.to) params.append("to", query.to);
+      if (query?.source) params.append("source", query.source);
+      if (query?.running !== undefined)
+        params.append("running", query.running.toString());
+      if (query?.page !== undefined)
+        params.append("page", query.page.toString());
+      if (query?.size !== undefined)
+        params.append("size", query.size.toString());
 
       const queryString = params.toString();
-      const endpoint = queryString ? `/api/records?${queryString}` : '/api/records';
-      
+      const endpoint = queryString
+        ? `/api/records?${queryString}`
+        : "/api/records";
+
       return api.get<PageResponse<ActivityRecord>>(endpoint);
     },
 
-    getRunningRecords: async (query?: Pick<ListRecordQuery, 'activityId' | 'page' | 'size'>): Promise<PageResponse<ActivityRecord> | null> => {
+    getRunningRecords: async (
+      query?: Pick<ListRecordQuery, "activityId" | "page" | "size">
+    ): Promise<PageResponse<ActivityRecord> | null> => {
       const params = new URLSearchParams();
-      
-      if (query?.activityId) params.append('activityId', query.activityId);
-      if (query?.page !== undefined) params.append('page', query.page.toString());
-      if (query?.size !== undefined) params.append('size', query.size.toString());
+
+      if (query?.activityId) params.append("activityId", query.activityId);
+      if (query?.page !== undefined)
+        params.append("page", query.page.toString());
+      if (query?.size !== undefined)
+        params.append("size", query.size.toString());
 
       const queryString = params.toString();
-      const endpoint = queryString ? `/api/records/running?${queryString}` : '/api/records/running';
-      
+      const endpoint = queryString
+        ? `/api/records/running?${queryString}`
+        : "/api/records/running";
+
       return api.get<PageResponse<ActivityRecord>>(endpoint);
     },
   };

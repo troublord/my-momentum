@@ -8,36 +8,43 @@ export const useApi = () => {
   const { accessToken } = useAuth();
   const { addError } = useError();
 
-  const headers: HeadersInit = useMemo(() => ({
-    "Content-Type": "application/json",
-    ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-  }), [accessToken]);
+  const headers: HeadersInit = useMemo(
+    () => ({
+      "Content-Type": "application/json",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    }),
+    [accessToken]
+  );
 
-  const handleApiError = useCallback((error: any, endpoint: string, method: string) => {
-    let errorMessage = "發生未知錯誤";
-    let errorTitle = "API 錯誤";
+  const handleApiError = useCallback(
+    (error: any, endpoint: string, method: string) => {
+      let errorMessage = "發生未知錯誤";
+      let errorTitle = "API 錯誤";
 
-    if (error instanceof Error) {
-      errorMessage = error.message;
-    } else if (typeof error === 'string') {
-      errorMessage = error;
-    }
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
 
-    // Don't show error for authentication failures as they redirect
-    if (error?.message?.includes('401') || error?.status === 401) {
-      return;
-    }
+      // Don't show error for authentication failures as they redirect
+      if (error?.message?.includes("401") || error?.status === 401) {
+        return;
+      }
 
-    addError({
-      type: 'error',
-      title: errorTitle,
-      message: `${method} ${endpoint} 失敗: ${errorMessage}`,
-      autoHide: true,
-      autoHideDelay: 5000,
-    });
-  }, [addError]);
+      addError({
+        type: "error",
+        title: errorTitle,
+        message: `${method} ${endpoint} 失敗: ${errorMessage}`,
+        autoHide: true,
+        autoHideDelay: 5000,
+      });
+    },
+    [addError]
+  );
 
-  const get = useCallback(async <T>(endpoint: string): Promise<T | null> => {
+  const get = useCallback(
+    async <T>(endpoint: string): Promise<T | null> => {
       try {
         const res = await fetch(`${API_BASE}${endpoint}`, { headers });
         if (res.status === 401) {
@@ -46,17 +53,23 @@ export const useApi = () => {
           return null;
         }
         if (!res.ok) {
-          throw new Error(`API Error: ${res.statusText}`);
+          const errorMessage = `API Error: ${res.status} ${res.statusText}`;
+          console.error(`GET ${endpoint} failed:`, errorMessage);
+          handleApiError(new Error(errorMessage), endpoint, "GET");
+          throw new Error(errorMessage);
         }
         return res.json() as Promise<T>;
       } catch (error) {
         console.error(`GET ${endpoint} failed:`, error);
-        handleApiError(error, endpoint, 'GET');
+        handleApiError(error, endpoint, "GET");
         throw error;
       }
-  }, [headers, handleApiError]);
+    },
+    [headers, handleApiError]
+  );
 
-  const post = useCallback(async <T>(endpoint: string, data?: any): Promise<T | null> => {
+  const post = useCallback(
+    async <T>(endpoint: string, data?: any): Promise<T | null> => {
       try {
         const res = await fetch(`${API_BASE}${endpoint}`, {
           method: "POST",
@@ -74,12 +87,15 @@ export const useApi = () => {
         return res.json() as Promise<T>;
       } catch (error) {
         console.error(`POST ${endpoint} failed:`, error);
-        handleApiError(error, endpoint, 'POST');
+        handleApiError(error, endpoint, "POST");
         throw error;
       }
-  }, [headers, handleApiError]);
+    },
+    [headers, handleApiError]
+  );
 
-  const put = useCallback(async <T>(endpoint: string, data?: any): Promise<T | null> => {
+  const put = useCallback(
+    async <T>(endpoint: string, data?: any): Promise<T | null> => {
       try {
         const res = await fetch(`${API_BASE}${endpoint}`, {
           method: "PUT",
@@ -97,12 +113,15 @@ export const useApi = () => {
         return res.json() as Promise<T>;
       } catch (error) {
         console.error(`PUT ${endpoint} failed:`, error);
-        handleApiError(error, endpoint, 'PUT');
+        handleApiError(error, endpoint, "PUT");
         throw error;
       }
-  }, [headers, handleApiError]);
+    },
+    [headers, handleApiError]
+  );
 
-  const deleteMethod = useCallback(async <T>(endpoint: string): Promise<T | null> => {
+  const deleteMethod = useCallback(
+    async <T>(endpoint: string): Promise<T | null> => {
       try {
         const res = await fetch(`${API_BASE}${endpoint}`, {
           method: "DELETE",
@@ -121,12 +140,15 @@ export const useApi = () => {
         return res.json() as Promise<T>;
       } catch (error) {
         console.error(`DELETE ${endpoint} failed:`, error);
-        handleApiError(error, endpoint, 'DELETE');
+        handleApiError(error, endpoint, "DELETE");
         throw error;
       }
-  }, [headers, handleApiError]);
+    },
+    [headers, handleApiError]
+  );
 
-  const patch = useCallback(async <T>(endpoint: string, data?: any): Promise<T | null> => {
+  const patch = useCallback(
+    async <T>(endpoint: string, data?: any): Promise<T | null> => {
       try {
         const res = await fetch(`${API_BASE}${endpoint}`, {
           method: "PATCH",
@@ -144,10 +166,12 @@ export const useApi = () => {
         return res.json() as Promise<T>;
       } catch (error) {
         console.error(`PATCH ${endpoint} failed:`, error);
-        handleApiError(error, endpoint, 'PATCH');
+        handleApiError(error, endpoint, "PATCH");
         throw error;
       }
-  }, [headers, handleApiError]);
+    },
+    [headers, handleApiError]
+  );
 
   return {
     get,

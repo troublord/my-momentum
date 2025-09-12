@@ -5,6 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 const IntroPage: React.FC = () => {
   const { setAccessToken } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
