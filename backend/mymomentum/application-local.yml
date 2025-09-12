@@ -3,7 +3,7 @@
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/mymomentumdb
+    url: jdbc:postgresql://localhost:15432/mymomentumdb
     username: mymomentum
     password: secret123
     hikari:

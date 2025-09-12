@@ -1,6 +1,6 @@
 # MyMomentum - Modern Activity Tracking Backend
 
-MyMomentum is a backend service built with Spring Boot, providing a RESTful API for activity tracking and user management. 
+MyMomentum is a backend service built with Spring Boot, providing a RESTful API for activity tracking and user management.
 
 - **Google OAuth login** for secure user authentication
 - **JWT-based authentication** for stateless, secure API access
@@ -84,7 +84,7 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "15432:5432"
 ```
 
 #### 應用配置 (application.yml)
@@ -92,7 +92,7 @@ services:
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/mymomentumdb
+    url: jdbc:postgresql://localhost:15432/mymomentumdb
     username: mymomentum
     password: secret123
     driver-class-name: org.postgresql.Driver
@@ -210,7 +210,7 @@ http://localhost:8080/api-docs
 
 - **數據庫類型**: PostgreSQL 16
 - **主機**: localhost
-- **端口**: 5432
+- **端口**: 15432
 - **數據庫名**: mymomentumdb
 - **用戶名**: mymomentum
 - **密碼**: secret123

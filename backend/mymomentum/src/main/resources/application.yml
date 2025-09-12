@@ -4,7 +4,7 @@ spring:
   application:
     name: mymomentum
   datasource:
-    url: jdbc:postgresql://localhost:5432/mymomentumdb
+    url: jdbc:postgresql://localhost:15432/mymomentumdb
     username: mymomentum
     password: secret123
     driver-class-name: org.postgresql.Driver
@@ -26,6 +26,14 @@ spring:
           time_zone: UTC
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     open-in-view: false
+
+  # Cache Configuration
+  cache:
+    type: simple
+    cache-names:
+      - activityDistribution
+      - activityTrend
+      - activityKPIs
 
   # Flyway Configuration
   flyway:

@@ -161,7 +161,7 @@ spring:
     name: mymomentum
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/mymomentumdb
+    url: jdbc:postgresql://localhost:15432/mymomentumdb
     username: mymomentum
     password: secret123
     driver-class-name: org.postgresql.Driver
@@ -202,7 +202,7 @@ springdoc:
 
 ### Configuration Highlights:
 
-- **Database Connection**: PostgreSQL on localhost:5432
+- **Database Connection**: PostgreSQL on localhost:15432
 - **JPA Settings**: Auto-update schema, show SQL for debugging
 - **Logging**: Detailed SQL logging for development
 - **Swagger**: API documentation at `/swagger-ui.html`
@@ -226,7 +226,7 @@ services:
     volumes:
       - ./pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "15432:5432"
 ```
 
 **Benefits of Docker approach:**

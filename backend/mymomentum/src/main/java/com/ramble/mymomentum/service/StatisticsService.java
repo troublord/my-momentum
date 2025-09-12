@@ -4,12 +4,16 @@ import com.ramble.mymomentum.dto.ActivityStatistics;
 import com.ramble.mymomentum.dto.ActivityStatsSimple;
 import com.ramble.mymomentum.dto.Summary;
 import com.ramble.mymomentum.dto.WeeklyTrendItem;
+import com.ramble.mymomentum.dto.DistributionItem;
+import com.ramble.mymomentum.dto.TrendItem;
+import com.ramble.mymomentum.dto.ActivityKPIs;
 import org.springframework.data.domain.PageRequest;
 import com.ramble.mymomentum.entity.Activity;
 import com.ramble.mymomentum.repository.ActivityRepository;
 import com.ramble.mymomentum.repository.ActivityRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,10 +42,6 @@ public class StatisticsService {
      * Get summary statistics for a specific period (default: current week)
      */
     public Summary getSummary(Long userId, String period) {
-        if (period == null) {
-            period = "week";
-        }
-        
         PeriodInfo periodInfo = calculatePeriodBounds(period);
         return calculateSummary(userId, periodInfo);
     }
@@ -284,4 +284,202 @@ public class StatisticsService {
 
     // Helper record for period information
     private record PeriodInfo(Instant start, Instant end, double scale) {}
+    
+    // ===== NEW FRONTEND API METHODS =====
+    
+    /**
+     * Get activity distribution data for charts
+     */
+    @Cacheable(value = "activityDistribution", key = "#activityId + '_' + #fromDate + '_' + #toDate + '_' + #grain")
+    public List<DistributionItem> getActivityDistribution(UUID activityId, Long userId, String fromDate, String toDate, String grain) {
+        // Verify activity belongs to user
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found: " + activityId));
+        
+        if (!activity.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("Activity does not belong to user: " + userId);
+        }
+        
+        // Validate grain
+        if (!List.of("day", "week", "month").contains(grain)) {
+            throw new IllegalArgumentException("Invalid grain. Must be 'day', 'week', or 'month'");
+        }
+        
+        // Parse dates and validate range
+        try {
+            LocalDate startDate = LocalDate.parse(fromDate);
+            LocalDate endDate = LocalDate.parse(toDate);
+            
+            if (startDate.isAfter(endDate)) {
+                throw new IllegalArgumentException("Start date cannot be after end date");
+            }
+            
+            // Limit query range to prevent performance issues
+            long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+            validateDateRange(grain, daysBetween);
+            
+            Instant fromInstant = startDate.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant toInstant = endDate.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant(); // End is exclusive
+            
+            log.info("Getting activity distribution for activity: {}, from: {}, to: {}, grain: {}", 
+                    activityId, fromDate, toDate, grain);
+            
+            List<Object[]> results = activityRecordRepository.getActivityDistribution(
+                    activityId, fromDate, toDate, fromInstant, toInstant, grain);
+            
+            return results.stream()
+                    .map(row -> new DistributionItem(
+                            (String) row[0],           // date
+                            ((Number) row[1]).intValue(), // durationSec
+                            ((Number) row[2]).intValue()  // count
+                    ))
+                    .collect(Collectors.toList());
+                    
+        } catch (Exception e) {
+            log.error("Error getting activity distribution", e);
+            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
+        }
+    }
+    
+    /**
+     * Get activity trend data for charts
+     */
+    @Cacheable(value = "activityTrend", key = "#activityId + '_' + #fromDate + '_' + #toDate + '_' + #grain")
+    public List<TrendItem> getActivityTrend(UUID activityId, Long userId, String fromDate, String toDate, String grain) {
+        // Verify activity belongs to user
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found: " + activityId));
+        
+        if (!activity.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("Activity does not belong to user: " + userId);
+        }
+        
+        // Validate grain
+        if (!List.of("week", "month").contains(grain)) {
+            throw new IllegalArgumentException("Invalid grain for trend. Must be 'week' or 'month'");
+        }
+        
+        try {
+            LocalDate startDate = LocalDate.parse(fromDate);
+            LocalDate endDate = LocalDate.parse(toDate);
+            
+            if (startDate.isAfter(endDate)) {
+                throw new IllegalArgumentException("Start date cannot be after end date");
+            }
+            
+            long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+            validateDateRange(grain, daysBetween);
+            
+            Instant fromInstant = startDate.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant toInstant = endDate.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant(); // End is exclusive
+            
+            log.info("Getting activity trend for activity: {}, from: {}, to: {}, grain: {}", 
+                    activityId, fromDate, toDate, grain);
+            
+            List<Object[]> results = activityRecordRepository.getActivityTrend(
+                    userId, activityId, fromInstant, toInstant, grain, "Asia/Taipei");
+            
+            return results.stream()
+                    .map(row -> new TrendItem(
+                            (String) row[0],           // periodStart
+                            ((Number) row[1]).intValue(), // duration_sec
+                            ((Number) row[2]).intValue()  // totalCount
+                    ))
+                    .collect(Collectors.toList());
+                    
+        } catch (Exception e) {
+            log.error("Error getting activity trend", e);
+            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
+        }
+    }
+    
+    /**
+     * Get activity KPI metrics
+     */
+    @Cacheable(value = "activityKPIs", key = "#activityId + '_' + #fromDate + '_' + #toDate")
+    public ActivityKPIs getActivityKPIs(UUID activityId, Long userId, String fromDate, String toDate) {
+        // Verify activity belongs to user
+        Activity activity = activityRepository.findById(activityId)
+                .orElseThrow(() -> new IllegalArgumentException("Activity not found: " + activityId));
+        
+        if (!activity.getUserId().equals(userId)) {
+            throw new IllegalArgumentException("Activity does not belong to user: " + userId);
+        }
+        
+        try {
+            LocalDate startDate = LocalDate.parse(fromDate);
+            LocalDate endDate = LocalDate.parse(toDate);
+            
+            if (startDate.isAfter(endDate)) {
+                throw new IllegalArgumentException("Start date cannot be after end date");
+            }
+            
+            Instant fromInstant = startDate.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant toInstant = endDate.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant(); // End is exclusive
+            
+            // Calculate current week and previous week bounds for week-over-week comparison
+            ZonedDateTime now = ZonedDateTime.now(TAIPEI_ZONE);
+            ZonedDateTime currentWeekStart = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                    .truncatedTo(ChronoUnit.DAYS);
+            ZonedDateTime currentWeekEnd = currentWeekStart.plusWeeks(1);
+            ZonedDateTime previousWeekStart = currentWeekStart.minusWeeks(1);
+            ZonedDateTime previousWeekEnd = currentWeekStart;
+            
+            log.info("Getting activity KPIs for activity: {}, from: {}, to: {}", 
+                    activityId, fromDate, toDate);
+            
+            Object[] result = activityRecordRepository.getActivityKPIs(
+                    activityId, fromInstant, toInstant,
+                    currentWeekStart.toInstant(), currentWeekEnd.toInstant(),
+                    previousWeekStart.toInstant(), previousWeekEnd.toInstant());
+            
+            if (result == null || result.length < 4) {
+                return new ActivityKPIs(0, 0, 0.0);
+            }
+            
+            Integer avgDurationSec = ((Number) result[0]).intValue();
+            Integer maxSingleDurationSec = ((Number) result[1]).intValue();
+            Long currentWeekTotal = ((Number) result[2]).longValue();
+            Long previousWeekTotal = ((Number) result[3]).longValue();
+            
+            // Calculate week-over-week change percentage
+            Double weekOverWeekChangePct = 0.0;
+            if (previousWeekTotal > 0) {
+                weekOverWeekChangePct = (double) (currentWeekTotal - previousWeekTotal) / previousWeekTotal;
+                // Clamp to [-1.0, 1.0] range as specified in frontend requirements
+                weekOverWeekChangePct = Math.max(-1.0, Math.min(1.0, weekOverWeekChangePct));
+            } else if (currentWeekTotal > 0) {
+                weekOverWeekChangePct = 1.0; // 100% increase from 0
+            }
+            
+            return new ActivityKPIs(avgDurationSec, maxSingleDurationSec, weekOverWeekChangePct);
+            
+        } catch (Exception e) {
+            log.error("Error getting activity KPIs", e);
+            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
+        }
+    }
+    
+    /**
+     * Validate date range based on grain to prevent performance issues
+     */
+    private void validateDateRange(String grain, long daysBetween) {
+        switch (grain) {
+            case "day" -> {
+                if (daysBetween > 90) {
+                    throw new IllegalArgumentException("Day grain query cannot exceed 90 days");
+                }
+            }
+            case "week" -> {
+                if (daysBetween > 365) {
+                    throw new IllegalArgumentException("Week grain query cannot exceed 1 year");
+                }
+            }
+            case "month" -> {
+                if (daysBetween > 1095) { // 3 years
+                    throw new IllegalArgumentException("Month grain query cannot exceed 3 years");
+                }
+            }
+        }
+    }
 }

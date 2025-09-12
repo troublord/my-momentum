@@ -45,6 +45,22 @@ public class StatisticsController {
             content = @Content(schema = @Schema(implementation = Summary.class))
         )
     })
+    public ResponseEntity<Summary> getSummary(Authentication authentication) {
+        return getSummary(authentication, "week", null, null);
+    }
+
+    @GetMapping("/summary/period")
+    @Operation(
+        summary = "獲取統計摘要（指定參數）",
+        description = "獲取用戶的統計摘要數據，可指定時間週期或日期範圍"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "統計摘要獲取成功",
+            content = @Content(schema = @Schema(implementation = Summary.class))
+        )
+    })
     public ResponseEntity<Summary> getSummary(
             Authentication authentication,
             @Parameter(description = "時間週期：week, month, year")

@@ -215,6 +215,7 @@ public class ActivityRecordService {
         );
     }
 
+    /* Helper */
     private Page<ActivityRecord> getFilteredRecords(Long userId, UUID activityId, Instant from, Instant to, 
                                                    RecordSource source, Pageable pageable) {
         boolean hasActivityFilter = activityId != null;

@@ -84,14 +84,14 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
      */
     @Query("""
         FROM ActivityRecord ar
-        WHERE ar.userId = :userId
-          AND ar.activityId = :activityId
-          AND ar.executedAt >= :from AND ar.executedAt < :to
+        WHERE ar.userId = ?1
+          AND ar.activityId = ?2
+          AND ar.executedAt >= ?3 AND ar.executedAt < ?4
         """)
-    Page<ActivityRecord> findByUserIdAndActivityIdAndExecutedAtRange(@Param("userId") Long userId,
-                                                                     @Param("activityId") UUID activityId,
-                                                                     @Param("from") Instant from,
-                                                                     @Param("to") Instant to,
+    Page<ActivityRecord> findByUserIdAndActivityIdAndExecutedAtRange(Long userId,
+                                                                     UUID activityId,
+                                                                     Instant from,
+                                                                     Instant to,
                                                                      Pageable pageable);
     
     /**
@@ -114,30 +114,30 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
      */
     @Query("""
         FROM ActivityRecord ar
-        WHERE ar.userId = :userId
-          AND ar.activityId = :activityId
-          AND ar.source = :source
-          AND ar.executedAt >= :from AND ar.executedAt < :to
+        WHERE ar.userId = ?1
+          AND ar.activityId = ?2
+          AND ar.source = ?3
+          AND ar.executedAt >= ?4 AND ar.executedAt < ?5
         """)
-    Page<ActivityRecord> findByUserIdAndActivityIdAndSourceAndExecutedAtRange(@Param("userId") Long userId,
-                                                                              @Param("activityId") UUID activityId,
-                                                                              @Param("source") RecordSource source,
-                                                                              @Param("from") Instant from,
-                                                                              @Param("to") Instant to,
+    Page<ActivityRecord> findByUserIdAndActivityIdAndSourceAndExecutedAtRange(Long userId,
+                                                                              UUID activityId,
+                                                                              RecordSource source,
+                                                                              Instant from,
+                                                                              Instant to,
                                                                               Pageable pageable);
 
     
     /**
      * Calculate total time spent on an activity (in seconds)
      */
-    @Query("SELECT COALESCE(SUM(ar.duration), 0) FROM ActivityRecord ar WHERE ar.activityId = :activityId")
-    Long getTotalTimeByActivityId(@Param("activityId") UUID activityId);
+    @Query("SELECT COALESCE(SUM(ar.duration), 0) FROM ActivityRecord ar WHERE ar.activityId = ?1")
+    Long getTotalTimeByActivityId(UUID activityId);
     
     /**
      * Calculate weekly time spent on an activity (in seconds)
      */
-    @Query("SELECT COALESCE(SUM(ar.duration), 0) FROM ActivityRecord ar WHERE ar.activityId = :activityId AND ar.executedAt >= :weekStart")
-    Long getWeeklyTimeByActivityId(@Param("activityId") UUID activityId, @Param("weekStart") Instant weekStart);
+    @Query("SELECT COALESCE(SUM(ar.duration), 0) FROM ActivityRecord ar WHERE ar.activityId = ?1 AND ar.executedAt >= ?2")
+    Long getWeeklyTimeByActivityId(UUID activityId, Instant weekStart);
     
     /**
      * Calculate total duration in minutes for a user within a date range (only completed records)
@@ -148,8 +148,8 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
     /**
      * Calculate total duration in minutes for a specific activity within a date range (only completed records)
      */
-    @Query("SELECT COALESCE(SUM(ar.duration), 0) / 60 FROM ActivityRecord ar WHERE ar.activityId = :activityId AND ar.executedAt >= :start AND ar.executedAt < :end AND ar.duration IS NOT NULL")
-    Long getActivityMinutesInRange(@Param("activityId") UUID activityId, @Param("start") Instant start, @Param("end") Instant end);
+    @Query("SELECT COALESCE(SUM(ar.duration), 0) / 60 FROM ActivityRecord ar WHERE ar.activityId = ?1 AND ar.executedAt >= ?2 AND ar.executedAt < ?3 AND ar.duration IS NOT NULL")
+    Long getActivityMinutesInRange(UUID activityId, Instant start, Instant end);
     
     /**
      * Find the activity with the most total duration in a date range for a user
@@ -195,11 +195,142 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
             FUNCTION('DATE_TRUNC', 'week', ar.executedAt) as weekStart,
             COALESCE(SUM(ar.duration), 0) / 60 as totalMinutes
         FROM ActivityRecord ar 
-        WHERE ar.activityId = :activityId 
+        WHERE ar.activityId = ?1 
             AND ar.duration IS NOT NULL
-            AND ar.executedAt >= :earliestWeekStart
+            AND ar.executedAt >= ?2
         GROUP BY FUNCTION('DATE_TRUNC', 'week', ar.executedAt)
         ORDER BY weekStart
         """)
-    List<Object[]> getWeeklyTrendForActivity(@Param("activityId") UUID activityId, @Param("earliestWeekStart") Instant earliestWeekStart);
+    List<Object[]> getWeeklyTrendForActivity(UUID activityId, Instant earliestWeekStart);
+    
+    // ===== NEW STATISTICS METHODS FOR FRONTEND APIs =====
+    
+    /**
+     * Get activity distribution data by date/week/month grain
+     * Returns list of [date, duration_sec, recordCount]
+     */
+    @Query(value = """
+        WITH date_series AS (
+            SELECT CAST(generate_series(
+                CAST(:fromDate AS date), 
+                CAST(:toDate AS date) - CAST('1 day' AS interval), 
+                CASE 
+                    WHEN :grain = 'day' THEN CAST('1 day' AS interval)
+                    WHEN :grain = 'week' THEN CAST('1 week' AS interval)
+                    WHEN :grain = 'month' THEN CAST('1 month' AS interval)
+                END
+            ) AS date) as date
+        ),
+        activity_data AS (
+            SELECT 
+                CASE 
+                    WHEN :grain = 'day' THEN DATE(executed_at AT TIME ZONE 'Asia/Taipei')
+                    WHEN :grain = 'week' THEN DATE(DATE_TRUNC('week', executed_at AT TIME ZONE 'Asia/Taipei'))
+                    WHEN :grain = 'month' THEN DATE(DATE_TRUNC('month', executed_at AT TIME ZONE 'Asia/Taipei'))
+                END as record_date,
+                SUM(duration) as duration_sec,
+                COUNT(*) as record_count
+            FROM activity_records 
+            WHERE activity_id = CAST(:activityId AS uuid)
+                AND executed_at >= :fromInstant 
+                AND executed_at < :toInstant
+                AND duration IS NOT NULL
+            GROUP BY 1
+        )
+        SELECT 
+            TO_CHAR(ds.date, 'YYYY-MM-DD') as date,
+            COALESCE(ad.duration_sec, 0) as duration_sec,
+            COALESCE(ad.record_count, 0) as count
+        FROM date_series ds
+        LEFT JOIN activity_data ad ON ds.date = ad.record_date
+        ORDER BY 1
+        """, nativeQuery = true)
+    List<Object[]> getActivityDistribution(@Param("activityId") UUID activityId, 
+                                         @Param("fromDate") String fromDate,
+                                         @Param("toDate") String toDate,
+                                         @Param("fromInstant") Instant fromInstant,
+                                         @Param("toInstant") Instant toInstant,
+                                         @Param("grain") String grain);
+    
+    /**
+     * Get activity trend data by week/month grain for custom date range
+     * Returns list of [periodStart, duration_sec, totalCount]
+     */
+    @Query(value = """
+        WITH base AS (
+            SELECT
+                CASE
+                    WHEN :grain = 'week' THEN DATE_TRUNC('week', executed_at AT TIME ZONE :tz)
+                    WHEN :grain = 'month' THEN DATE_TRUNC('month', executed_at AT TIME ZONE :tz)
+                END AS bucket_start,
+                duration
+            FROM activity_records
+            WHERE user_id = CAST(:userId AS bigint)
+                AND activity_id = CAST(:activityId AS uuid)
+                AND executed_at >= :fromInstant
+                AND executed_at < :toInstant
+                AND duration IS NOT NULL
+        )
+        SELECT
+            TO_CHAR(bucket_start, 'YYYY-MM-DD') AS period_start,
+            SUM(duration) AS duration_sec,
+            COUNT(*) AS total_count
+        FROM base
+        GROUP BY bucket_start
+        ORDER BY bucket_start
+        """, nativeQuery = true)
+    List<Object[]> getActivityTrend(@Param("userId") Long userId,
+                                  @Param("activityId") UUID activityId,
+                                  @Param("fromInstant") Instant fromInstant,
+                                  @Param("toInstant") Instant toInstant,
+                                  @Param("grain") String grain,
+                                  @Param("tz") String tz);
+    
+    /**
+     * Get activity KPI metrics for a date range
+     * Returns [avgDurationSec, maxSingleDurationSec, currentWeekTotal, previousWeekTotal]
+     */
+    @Query(value = """
+        WITH period_stats AS (
+            SELECT 
+                COALESCE(AVG(duration), 0) as avg_duration_sec,
+                COALESCE(MAX(duration), 0) as max_single_duration_sec
+            FROM activity_records 
+            WHERE activity_id = CAST(:activityId AS uuid)
+                AND executed_at >= :fromInstant 
+                AND executed_at < :toInstant
+                AND duration IS NOT NULL
+        ),
+        current_week AS (
+            SELECT COALESCE(SUM(duration), 0) as current_week_total
+            FROM activity_records 
+            WHERE activity_id = CAST(:activityId AS uuid)
+                AND executed_at >= :currentWeekStart 
+                AND executed_at < :currentWeekEnd
+                AND duration IS NOT NULL
+        ),
+        previous_week AS (
+            SELECT COALESCE(SUM(duration), 0) as previous_week_total
+            FROM activity_records 
+            WHERE activity_id = CAST(:activityId AS uuid)
+                AND executed_at >= :previousWeekStart 
+                AND executed_at < :previousWeekEnd
+                AND duration IS NOT NULL
+        )
+        SELECT 
+            ps.avg_duration_sec,
+            ps.max_single_duration_sec,
+            cw.current_week_total,
+            pw.previous_week_total
+        FROM period_stats ps
+        CROSS JOIN current_week cw
+        CROSS JOIN previous_week pw
+        """, nativeQuery = true)
+    Object[] getActivityKPIs(@Param("activityId") UUID activityId,
+                           @Param("fromInstant") Instant fromInstant,
+                           @Param("toInstant") Instant toInstant,
+                           @Param("currentWeekStart") Instant currentWeekStart,
+                           @Param("currentWeekEnd") Instant currentWeekEnd,
+                           @Param("previousWeekStart") Instant previousWeekStart,
+                           @Param("previousWeekEnd") Instant previousWeekEnd);
 }

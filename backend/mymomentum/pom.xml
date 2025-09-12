@@ -68,6 +68,12 @@
             <version>2.2.0</version>
         </dependency>
 
+        <!-- Spring Cache -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+
         <!-- Google API Client for ID token verification -->
         <dependency>
             <groupId>com.google.api-client</groupId>
