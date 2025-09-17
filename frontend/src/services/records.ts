@@ -104,23 +104,9 @@ export const useRecords = () => {
       return api.get<PageResponse<ActivityRecord>>(endpoint);
     },
 
-    getRunningRecords: async (
-      query?: Pick<ListRecordQuery, "activityId" | "page" | "size">
-    ): Promise<PageResponse<ActivityRecord> | null> => {
-      const params = new URLSearchParams();
-
-      if (query?.activityId) params.append("activityId", query.activityId);
-      if (query?.page !== undefined)
-        params.append("page", query.page.toString());
-      if (query?.size !== undefined)
-        params.append("size", query.size.toString());
-
-      const queryString = params.toString();
-      const endpoint = queryString
-        ? `/api/records/running?${queryString}`
-        : "/api/records/running";
-
-      return api.get<PageResponse<ActivityRecord>>(endpoint);
-    },
+    getRunningRecords:
+      async (): Promise<PageResponse<ActivityRecord> | null> => {
+        return api.get<PageResponse<ActivityRecord>>("/api/records/running");
+      },
   };
 };

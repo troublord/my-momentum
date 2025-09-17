@@ -10,8 +10,12 @@ interface RecordPanelProps {
 }
 
 const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
-  const { createLiveRecord, finishLiveRecord, createManualRecord } =
-    useRecords();
+  const {
+    createLiveRecord,
+    finishLiveRecord,
+    createManualRecord,
+    getRunningRecords,
+  } = useRecords();
   const { addError } = useError();
 
   // UI State
@@ -24,7 +28,9 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
   // LIVE recording state
   const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
   const [elapsedSec, setElapsedSec] = useState(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasCheckedRunningRecords = useRef<boolean>(false);
 
   // Manual recording state
   const [manualDuration, setManualDuration] = useState(30);
@@ -35,11 +41,96 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
 
   const isRecording = currentRecordId !== null;
 
-  // Timer management
+  // 檢查並恢復正在進行的記錄狀態（使用 ref 防止重複調用）
+  useEffect(() => {
+    const checkAndRestoreRunningRecords = async () => {
+      // 防止重複檢查
+      if (hasCheckedRunningRecords.current) {
+        return;
+      }
+
+      try {
+        console.log("🔍 檢查正在進行的記錄...");
+        hasCheckedRunningRecords.current = true; // 標記已檢查
+
+        // 不需要傳遞任何參數，檢查所有正在進行的記錄
+        const runningRecords = await getRunningRecords();
+
+        if (runningRecords && runningRecords.data.length > 0) {
+          console.log("✅ 找到正在進行的記錄:", runningRecords.data);
+
+          // 找到正在進行的記錄（取第一個）
+          const runningRecord = runningRecords.data[0];
+
+          // 設置記錄 ID
+          setCurrentRecordId(runningRecord.id);
+
+          // 計算已經過的時間
+          const recordStartTime = new Date(runningRecord.executedAt).getTime();
+          const now = Date.now();
+          const elapsedMs = now - recordStartTime;
+          const elapsedSeconds = Math.floor(elapsedMs / 1000);
+
+          console.log(`⏱️ 計算經過時間: ${elapsedSeconds} 秒`);
+
+          setElapsedSec(elapsedSeconds);
+          setStartTime(recordStartTime);
+
+          // 設置選中的活動（如果該活動還在列表中）
+          const targetActivity = activities.find(
+            (a) => a.id === runningRecord.activityId
+          );
+          if (targetActivity) {
+            setSelectedActivity(runningRecord.activityId);
+            console.log(`🎨 設置選中活動: ${targetActivity.name}`);
+          }
+
+          addError({
+            type: "info",
+            title: "恢復記錄",
+            message: `發現正在進行的記錄，已自動恢復（${Math.floor(
+              elapsedSeconds / 60
+            )} 分鐘）`,
+            autoHide: true,
+            autoHideDelay: 5000,
+          });
+        } else {
+          console.log("ℹ️ 沒有找到正在進行的記錄");
+        }
+      } catch (error) {
+        console.error("❌ 檢查正在進行記錄失敗:", error);
+        hasCheckedRunningRecords.current = false; // 失敗時重置標記，允許重試
+      }
+    };
+
+    // 只有當活動列表載入完成且當前沒有記錄時才檢查
+    if (
+      activities.length > 0 &&
+      !currentRecordId &&
+      !hasCheckedRunningRecords.current
+    ) {
+      checkAndRestoreRunningRecords();
+    }
+  }, [activities, currentRecordId, getRunningRecords, addError]);
+
+  // Timer management - 基於時間戳的計時器
   useEffect(() => {
     if (isRecording) {
+      // 只有當 startTime 還沒有設置時，才設置為當前時間（新記錄）
+      if (!startTime) {
+        const recordStartTime = Date.now();
+        setStartTime(recordStartTime);
+        setElapsedSec(0);
+      }
+
+      // 使用時間戳計算經過時間，而不是累加
       timerRef.current = setInterval(() => {
-        setElapsedSec((prev) => prev + 1);
+        const currentTime = Date.now();
+        // 使用已設置的 startTime（可能是恢復的時間）
+        const actualStartTime = startTime || Date.now();
+        const elapsedMs = currentTime - actualStartTime;
+        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        setElapsedSec(elapsedSeconds);
       }, 1000);
     } else {
       if (timerRef.current) {
@@ -47,6 +138,7 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
         timerRef.current = null;
       }
       setElapsedSec(0);
+      setStartTime(null);
     }
 
     return () => {
@@ -55,7 +147,27 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
         timerRef.current = null;
       }
     };
-  }, [isRecording]);
+  }, [isRecording, startTime]);
+
+  // 當分頁重新獲得焦點時，立即更新計時器（解決背景節流問題）
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && isRecording && startTime) {
+        // 分頁重新獲得焦點，立即更新時間
+        const currentTime = Date.now();
+        const elapsedMs = currentTime - startTime;
+        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        setElapsedSec(elapsedSeconds);
+      }
+    };
+
+    // 監聽分頁可見性變化
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isRecording, startTime]);
 
   // Cleanup on unmount
   useEffect(() => {

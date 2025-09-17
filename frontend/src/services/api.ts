@@ -5,7 +5,7 @@ import { useError } from "../contexts/ErrorContext";
 const API_BASE = "http://localhost:8080";
 
 export const useApi = () => {
-  const { accessToken } = useAuth();
+  const { accessToken, logout } = useAuth();
   const { addError } = useError();
 
   const headers: HeadersInit = useMemo(
@@ -15,6 +15,17 @@ export const useApi = () => {
     }),
     [accessToken]
   );
+
+  const handleAuthError = useCallback(() => {
+    logout();
+    addError({
+      type: "error",
+      title: "登入已過期",
+      message: "您的登入已過期，請重新登入",
+      autoHide: true,
+      autoHideDelay: 5000,
+    });
+  }, [logout, addError]);
 
   const handleApiError = useCallback(
     (error: any, endpoint: string, method: string) => {
@@ -28,7 +39,12 @@ export const useApi = () => {
       }
 
       // Don't show error for authentication failures as they redirect
-      if (error?.message?.includes("401") || error?.status === 401) {
+      if (
+        error?.message?.includes("401") ||
+        error?.status === 401 ||
+        error?.message?.includes("403") ||
+        error?.status === 403
+      ) {
         return;
       }
 
@@ -47,9 +63,8 @@ export const useApi = () => {
     async <T>(endpoint: string): Promise<T | null> => {
       try {
         const res = await fetch(`${API_BASE}${endpoint}`, { headers });
-        if (res.status === 401) {
-          localStorage.removeItem("mm_access_token");
-          window.location.href = "/";
+        if (res.status === 401 || res.status === 403) {
+          handleAuthError();
           return null;
         }
         if (!res.ok) {
@@ -65,7 +80,7 @@ export const useApi = () => {
         throw error;
       }
     },
-    [headers, handleApiError]
+    [headers, handleApiError, handleAuthError]
   );
 
   const post = useCallback(
@@ -76,9 +91,8 @@ export const useApi = () => {
           headers,
           body: data ? JSON.stringify(data) : undefined,
         });
-        if (res.status === 401) {
-          localStorage.removeItem("mm_access_token");
-          window.location.href = "/";
+        if (res.status === 401 || res.status === 403) {
+          handleAuthError();
           return null;
         }
         if (!res.ok) {
@@ -91,7 +105,7 @@ export const useApi = () => {
         throw error;
       }
     },
-    [headers, handleApiError]
+    [headers, handleApiError, handleAuthError]
   );
 
   const put = useCallback(
@@ -102,9 +116,8 @@ export const useApi = () => {
           headers,
           body: data ? JSON.stringify(data) : undefined,
         });
-        if (res.status === 401) {
-          localStorage.removeItem("mm_access_token");
-          window.location.href = "/";
+        if (res.status === 401 || res.status === 403) {
+          handleAuthError();
           return null;
         }
         if (!res.ok) {
@@ -117,7 +130,7 @@ export const useApi = () => {
         throw error;
       }
     },
-    [headers, handleApiError]
+    [headers, handleApiError, handleAuthError]
   );
 
   const deleteMethod = useCallback(
@@ -127,9 +140,8 @@ export const useApi = () => {
           method: "DELETE",
           headers,
         });
-        if (res.status === 401) {
-          localStorage.removeItem("mm_access_token");
-          window.location.href = "/";
+        if (res.status === 401 || res.status === 403) {
+          handleAuthError();
           return null;
         }
         if (!res.ok) {
@@ -144,7 +156,7 @@ export const useApi = () => {
         throw error;
       }
     },
-    [headers, handleApiError]
+    [headers, handleApiError, handleAuthError]
   );
 
   const patch = useCallback(
@@ -155,9 +167,8 @@ export const useApi = () => {
           headers,
           body: data ? JSON.stringify(data) : undefined,
         });
-        if (res.status === 401) {
-          localStorage.removeItem("mm_access_token");
-          window.location.href = "/";
+        if (res.status === 401 || res.status === 403) {
+          handleAuthError();
           return null;
         }
         if (!res.ok) {
@@ -170,7 +181,7 @@ export const useApi = () => {
         throw error;
       }
     },
-    [headers, handleApiError]
+    [headers, handleApiError, handleAuthError]
   );
 
   return {

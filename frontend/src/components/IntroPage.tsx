@@ -47,7 +47,6 @@ const IntroPage: React.FC = () => {
               theme="outline"
               size="medium"
               locale="zh-TW"
-              useOneTap
             />
           </div>
         </div>
