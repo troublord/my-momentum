@@ -33,6 +33,11 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
     Page<ActivityRecord> findByUserIdAndSourceAndDurationIsNull(Long userId, RecordSource source, Pageable pageable);
     
     /**
+     * Find running LIVE records for a user (without pagination)
+     */
+    List<ActivityRecord> findByUserIdAndSourceAndDurationIsNull(Long userId, RecordSource source);
+    
+    /**
      * Find records by user ID only (for when no filters are applied)
      */
     Page<ActivityRecord> findByUserId(Long userId, Pageable pageable);

@@ -138,6 +138,7 @@ public class TestController {
 ```
 mymomentum/
 ├── pom.xml                                    # Maven 配置文件
+├── DATABASE_DESIGN.md                         # 資料庫設計文檔
 ├── src/
 │   ├── main/
 │   │   ├── java/
@@ -145,23 +146,37 @@ mymomentum/
 │   │   │       └── ramble/
 │   │   │           └── mymomentum/
 │   │   │               ├── MyMomentumApplication.java    # 主應用類
-│   │   │               ├── controller/
+│   │   │               ├── auth/                         # 認證相關
+│   │   │               │   ├── GoogleAuthController.java # Google OAuth 控制器
+│   │   │               │   ├── JwtService.java           # JWT 服務
+│   │   │               │   └── ...
+│   │   │               ├── controller/                   # REST 控制器
 │   │   │               │   ├── ActivityController.java   # 活動管理控制器
-│   │   │               │   └── TestController.java       # 測試控制器
-│   │   │               ├── dto/
-│   │   │               │   └── CreateActivityRequest.java # 創建活動請求DTO
-│   │   │               ├── entity/
+│   │   │               │   ├── ActivityRecordController.java # 活動記錄控制器
+│   │   │               │   └── StatisticsController.java # 統計控制器
+│   │   │               ├── dto/                          # 資料傳輸物件
+│   │   │               │   ├── CreateActivityRequest.java # 創建活動請求DTO
+│   │   │               │   ├── RecordResponse.java       # 記錄回應DTO
+│   │   │               │   └── ...
+│   │   │               ├── entity/                       # 實體類
 │   │   │               │   ├── Activity.java             # 活動實體類
 │   │   │               │   └── ActivityRecord.java       # 活動記錄實體類
-│   │   │               ├── enums/
+│   │   │               ├── enums/                        # 枚舉類
 │   │   │               │   └── RecordSource.java         # 記錄來源枚舉
-│   │   │               ├── repository/
+│   │   │               ├── repository/                   # 資料訪問層
 │   │   │               │   ├── ActivityRepository.java   # 活動數據訪問層
 │   │   │               │   └── ActivityRecordRepository.java # 活動記錄數據訪問層
-│   │   │               ├── service/
-│   │   │               │   └── ActivityService.java      # 活動業務邏輯層
+│   │   │               ├── service/                      # 業務邏輯層
+│   │   │               │   ├── ActivityService.java      # 活動業務邏輯層
+│   │   │               │   ├── ActivityRecordService.java # 活動記錄業務邏輯層
+│   │   │               │   └── StatisticsService.java    # 統計業務邏輯層
+│   │   │               ├── user/                         # 用戶相關
+│   │   │               │   ├── User.java                 # 用戶實體類
+│   │   │               │   └── UserRepository.java       # 用戶數據訪問層
 │   │   │               └── resources/
-│   │   │                   └── application.yml           # 應用配置文件
+│   │   │                   ├── application.yml           # 應用配置文件
+│   │   │                   └── db/migration/             # 資料庫遷移腳本
+│   │   │                       └── V1__Initial_schema.sql
 │   └── test/
 │       └── java/
 └── README.md                                   # 項目文檔
@@ -214,6 +229,43 @@ http://localhost:8080/api-docs
 - **數據庫名**: mymomentumdb
 - **用戶名**: mymomentum
 - **密碼**: secret123
+
+#### 資料表結構
+
+**users 表** - 用戶基本資訊
+
+- `id` (BIGSERIAL): 用戶唯一識別碼
+- `email` (VARCHAR): 用戶電子郵件（唯一，不區分大小寫）
+- `name` (VARCHAR): 用戶顯示名稱
+- `google_sub` (VARCHAR): Google OAuth Subject ID（唯一）
+- `created_at`, `updated_at` (TIMESTAMPTZ): 時間戳記
+
+**activities 表** - 活動定義
+
+- `id` (UUID): 活動唯一識別碼
+- `user_id` (BIGINT): 所屬用戶 ID（外鍵）
+- `name` (VARCHAR): 活動名稱（每用戶唯一）
+- `target_time` (INT): 每週目標時間（分鐘）
+- `color` (VARCHAR): 活動顏色代碼
+- `icon` (VARCHAR): 活動圖示代碼
+- `created_at`, `updated_at` (TIMESTAMPTZ): 時間戳記
+
+**activity_records 表** - 活動記錄
+
+- `id` (UUID): 記錄唯一識別碼
+- `user_id` (BIGINT): 所屬用戶 ID（外鍵）
+- `activity_id` (UUID): 所屬活動 ID（外鍵）
+- `source` (record_source): 記錄來源（LIVE/MANUAL 枚舉）
+- `duration` (INT): 持續時間（秒），進行中的 LIVE 記錄為 NULL
+- `executed_at` (TIMESTAMPTZ): 執行時間（時區感知）
+- `created_at`, `updated_at` (TIMESTAMPTZ): 時間戳記
+
+**record_source 枚舉類型**
+
+- `LIVE`: 即時記錄，進行中時 duration 為 NULL
+- `MANUAL`: 手動記錄，建立時即包含完整 duration
+
+> 📋 **詳細資料庫設計**: 請參考 [DATABASE_DESIGN.md](./DATABASE_DESIGN.md) 獲取完整的資料庫設計文檔
 
 ### JPA 配置
 

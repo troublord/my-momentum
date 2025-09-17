@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -193,25 +194,22 @@ public class ActivityRecordService {
 
     /**
      * List running LIVE records
+     * Note: A user can only have one running record at a time, so pagination is not needed
      */
     @Transactional(readOnly = true)
-    public PagedRecordResponse listRunningRecords(Long userId, UUID activityId, int page, int size) {
-        log.info("Listing running records for user: {}, activity: {}", userId, activityId);
+    public PagedRecordResponse listRunningRecords(Long userId) {
+        log.info("Listing running records for user: {}", userId);
         
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "executedAt"));
-        Page<ActivityRecord> recordPage;
-        
-        if (activityId != null) {
-            recordPage = activityRecordRepository.findByUserIdAndActivityIdAndSourceAndDurationIsNull(userId, activityId, RecordSource.LIVE, pageable);
-        } else {
-            recordPage = activityRecordRepository.findByUserIdAndSourceAndDurationIsNull(userId, RecordSource.LIVE, pageable);
-        }
-        
+        List<ActivityRecord> records;
+        records = activityRecordRepository.findByUserIdAndSourceAndDurationIsNull(userId, RecordSource.LIVE);
+        log.info("Result for all activities: {}", records);
+
+        // Convert to PagedRecordResponse with page=0, size=actual count, total=actual count
         return new PagedRecordResponse(
-                recordPage.getContent().stream().map(this::mapToResponse).toList(),
-                recordPage.getNumber(),
-                recordPage.getSize(),
-                recordPage.getTotalElements()
+                records.stream().map(this::mapToResponse).toList(),
+                0, // Always page 0 since there's only one record
+                records.size(), // Actual size
+                records.size()  // Total elements
         );
     }
 

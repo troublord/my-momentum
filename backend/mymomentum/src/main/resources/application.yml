@@ -53,7 +53,7 @@ app:
   security:
     jwt:
       secret: U/tCUvHbDJMpu43mvYlAjG8j+3knvcP5L2L3DLU6In1+sxXLBWJMFuXlD2H+uXqj
-      expirationMinutes: 60
+      expirationMinutes: 240
   cors:
     allowedOrigins:
       - http://localhost:3000

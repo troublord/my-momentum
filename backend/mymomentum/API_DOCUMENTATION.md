@@ -569,13 +569,7 @@ Authorization: Bearer <token>
 
 **端點：** `GET /api/records/running`
 
-**描述：** 獲取用戶正在進行的 LIVE 記錄列表
-
-**查詢參數：**
-
-- `activityId` (UUID, optional): 活動 ID 過濾
-- `page` (integer, optional): 頁碼（默認: 0）
-- `size` (integer, optional): 每頁大小（默認: 20）
+**描述：** 獲取用戶正在進行的 LIVE 記錄列表。根據業務邏輯，一個用戶同時只能有一個正在進行的記錄，因此不需要分頁參數。
 
 **請求標頭：**
 
@@ -599,10 +593,12 @@ Authorization: Bearer <token>
     }
   ],
   "page": 0,
-  "size": 20,
+  "size": 1,
   "total": 1
 }
 ```
+
+**注意：** 由於業務邏輯限制，此端點最多返回一個記錄。如果用戶沒有正在進行的記錄，`data` 數組將為空。
 
 ---
 
@@ -1043,12 +1039,8 @@ const getRecords = async (filters: any, token: string) => {
 };
 
 // 獲取正在進行的記錄
-const getRunningRecords = async (activityId: string | null, token: string) => {
-  const url = activityId
-    ? `/api/records/running?activityId=${activityId}`
-    : "/api/records/running";
-
-  const response = await fetch(url, {
+const getRunningRecords = async (token: string) => {
+  const response = await fetch("/api/records/running", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -1193,16 +1185,16 @@ Authorization: Bearer <your-jwt-token>
 
 ```json
 {
-  "avgDurationSec": 1800,  
+  "avgDurationSec": 1800,
   "maxSingleDurationSec": 7200,
-  "weekOverWeekChangePct": 0.15 
+  "weekOverWeekChangePct": 0.15
 }
 ```
 
 **參數說明：**
 
-- `avgDurationSec` (integer): 平均每次記錄秒數 (30分鐘)
-- `maxSingleDurationSec` (integer): 最長單次記錄秒數 (2小時)
+- `avgDurationSec` (integer): 平均每次記錄秒數 (30 分鐘)
+- `maxSingleDurationSec` (integer): 最長單次記錄秒數 (2 小時)
 - `weekOverWeekChangePct` (number): 週環比變化 (-1.0 到 +1.0) (+15%)
 
 **錯誤響應：**
@@ -1364,4 +1356,4 @@ try {
 
 ---
 
-_最後更新：2025 年 9 月_12 號
+\_最後更新：2025 年 9 月\_12 號

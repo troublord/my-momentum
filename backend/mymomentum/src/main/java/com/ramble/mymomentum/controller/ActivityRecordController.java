@@ -101,6 +101,7 @@ public class ActivityRecordController {
         return ResponseEntity.ok(record);
     }
 
+    //目前沒有用到
     @PutMapping("/{id}")
     @Operation(
         summary = "更新記錄",
@@ -201,7 +202,7 @@ public class ActivityRecordController {
     })
     public ResponseEntity<PagedRecordResponse> listRecords(
             Authentication authentication,
-            @Parameter(description = "活動ID過濾") @RequestParam(required = false) UUID activityId,
+            @Parameter(description = "活動ID過濾") @RequestParam(name = "activityId", required = false) UUID activityId,
             @Parameter(description = "開始時間過濾") @RequestParam(required = false) Instant from,
             @Parameter(description = "結束時間過濾") @RequestParam(required = false) Instant to,
             @Parameter(description = "記錄來源過濾") @RequestParam(required = false) RecordSource source,
@@ -228,14 +229,11 @@ public class ActivityRecordController {
         )
     })
     public ResponseEntity<PagedRecordResponse> listRunningRecords(
-            Authentication authentication,
-            @Parameter(description = "活動ID過濾") @RequestParam(required = false) UUID activityId,
-            @Parameter(description = "頁碼") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "每頁大小") @RequestParam(defaultValue = "20") int size) {
+            Authentication authentication) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Listing running records for user: {}", userId);
-        PagedRecordResponse records = activityRecordService.listRunningRecords(userId, activityId, page, size);
+        PagedRecordResponse records = activityRecordService.listRunningRecords(userId);
         return ResponseEntity.ok(records);
     }
 }
