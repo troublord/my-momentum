@@ -291,51 +291,5 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
                                   @Param("grain") String grain,
                                   @Param("tz") String tz);
     
-    /**
-     * Get activity KPI metrics for a date range
-     * Returns [avgDurationSec, maxSingleDurationSec, currentWeekTotal, previousWeekTotal]
-     */
-    @Query(value = """
-        WITH period_stats AS (
-            SELECT 
-                COALESCE(AVG(duration), 0) as avg_duration_sec,
-                COALESCE(MAX(duration), 0) as max_single_duration_sec
-            FROM activity_records 
-            WHERE activity_id = CAST(:activityId AS uuid)
-                AND executed_at >= :fromInstant 
-                AND executed_at < :toInstant
-                AND duration IS NOT NULL
-        ),
-        current_week AS (
-            SELECT COALESCE(SUM(duration), 0) as current_week_total
-            FROM activity_records 
-            WHERE activity_id = CAST(:activityId AS uuid)
-                AND executed_at >= :currentWeekStart 
-                AND executed_at < :currentWeekEnd
-                AND duration IS NOT NULL
-        ),
-        previous_week AS (
-            SELECT COALESCE(SUM(duration), 0) as previous_week_total
-            FROM activity_records 
-            WHERE activity_id = CAST(:activityId AS uuid)
-                AND executed_at >= :previousWeekStart 
-                AND executed_at < :previousWeekEnd
-                AND duration IS NOT NULL
-        )
-        SELECT 
-            ps.avg_duration_sec,
-            ps.max_single_duration_sec,
-            cw.current_week_total,
-            pw.previous_week_total
-        FROM period_stats ps
-        CROSS JOIN current_week cw
-        CROSS JOIN previous_week pw
-        """, nativeQuery = true)
-    Object[] getActivityKPIs(@Param("activityId") UUID activityId,
-                           @Param("fromInstant") Instant fromInstant,
-                           @Param("toInstant") Instant toInstant,
-                           @Param("currentWeekStart") Instant currentWeekStart,
-                           @Param("currentWeekEnd") Instant currentWeekEnd,
-                           @Param("previousWeekStart") Instant previousWeekStart,
-                           @Param("previousWeekEnd") Instant previousWeekEnd);
+    // Note: getActivityKPIs method removed - now using simpler approach in StatisticsService
 }

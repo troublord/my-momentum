@@ -203,12 +203,12 @@ public class ActivityRecordController {
     public ResponseEntity<PagedRecordResponse> listRecords(
             Authentication authentication,
             @Parameter(description = "活動ID過濾") @RequestParam(name = "activityId", required = false) UUID activityId,
-            @Parameter(description = "開始時間過濾") @RequestParam(required = false) Instant from,
-            @Parameter(description = "結束時間過濾") @RequestParam(required = false) Instant to,
-            @Parameter(description = "記錄來源過濾") @RequestParam(required = false) RecordSource source,
-            @Parameter(description = "僅顯示正在進行的LIVE記錄") @RequestParam(required = false) Boolean running,
-            @Parameter(description = "頁碼") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "每頁大小") @RequestParam(defaultValue = "20") int size) {
+            @Parameter(description = "開始時間過濾") @RequestParam(name = "from", required = false) Instant from,
+            @Parameter(description = "結束時間過濾") @RequestParam(name = "to", required = false) Instant to,
+            @Parameter(description = "記錄來源過濾") @RequestParam(name = "source", required = false) RecordSource source,
+            @Parameter(description = "僅顯示正在進行的LIVE記錄") @RequestParam(name = "running", required = false) Boolean running,
+            @Parameter(description = "頁碼") @RequestParam(name = "page", defaultValue = "0") int page,
+            @Parameter(description = "每頁大小") @RequestParam(name = "size", defaultValue = "20") int size) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Listing records for user: {} with filters", userId);

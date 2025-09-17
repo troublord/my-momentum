@@ -64,11 +64,11 @@ public class StatisticsController {
     public ResponseEntity<Summary> getSummary(
             Authentication authentication,
             @Parameter(description = "時間週期：week, month, year")
-            @RequestParam(required = false) String period,
+            @RequestParam(name = "period", required = false) String period,
             @Parameter(description = "開始日期 (YYYY-MM-DD)")
-            @RequestParam(required = false) String startDate,
+            @RequestParam(name = "startDate", required = false) String startDate,
             @Parameter(description = "結束日期 (YYYY-MM-DD)")
-            @RequestParam(required = false) String endDate) {
+            @RequestParam(name = "endDate", required = false) String endDate) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Getting summary for user: {}, period: {}, startDate: {}, endDate: {}", 
@@ -136,7 +136,7 @@ public class StatisticsController {
             @Parameter(description = "活動ID")
             @PathVariable("activityId") String activityId,
             @Parameter(description = "時間週期：week, month, year")
-            @RequestParam(required = false) String period) {
+            @RequestParam(name = "period", required = false) String period) {
         
         Long userId = (Long) authentication.getPrincipal();
         UUID activityUuid = UUID.fromString(activityId);
@@ -166,7 +166,7 @@ public class StatisticsController {
     public ResponseEntity<Map<String, List<WeeklyTrendItem>>> getWeeklyTrend(
             Authentication authentication,
             @Parameter(description = "活動ID（可選）")
-            @RequestParam(required = false) String activityId) {
+            @RequestParam(name = "activityId", required = false) String activityId) {
         
         Long userId = (Long) authentication.getPrincipal();
         UUID activityUuid = activityId != null ? UUID.fromString(activityId) : null;

@@ -7,8 +7,10 @@ import com.ramble.mymomentum.dto.WeeklyTrendItem;
 import com.ramble.mymomentum.dto.DistributionItem;
 import com.ramble.mymomentum.dto.TrendItem;
 import com.ramble.mymomentum.dto.ActivityKPIs;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import com.ramble.mymomentum.entity.Activity;
+import com.ramble.mymomentum.entity.ActivityRecord;
 import com.ramble.mymomentum.repository.ActivityRepository;
 import com.ramble.mymomentum.repository.ActivityRecordRepository;
 import lombok.RequiredArgsConstructor;
@@ -394,9 +396,9 @@ public class StatisticsService {
     }
     
     /**
-     * Get activity KPI metrics
+     * Get activity KPI metrics (refactored for better maintainability)
      */
-    @Cacheable(value = "activityKPIs", key = "#activityId + '_' + #fromDate + '_' + #toDate")
+    @Cacheable(value = "activityKPIs", key = "#userId + '_' + #activityId + '_' + #fromDate + '_' + #toDate")
     public ActivityKPIs getActivityKPIs(UUID activityId, Long userId, String fromDate, String toDate) {
         // Verify activity belongs to user
         Activity activity = activityRepository.findById(activityId)
@@ -417,7 +419,40 @@ public class StatisticsService {
             Instant fromInstant = startDate.atStartOfDay(TAIPEI_ZONE).toInstant();
             Instant toInstant = endDate.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant(); // End is exclusive
             
-            // Calculate current week and previous week bounds for week-over-week comparison
+            log.info("Getting activity KPIs for activity: {}, user: {}, from: {}, to: {}", 
+                    activityId, userId, fromDate, toDate);
+            
+            // 1. Get records in the specified date range for avg and max calculations
+            Page<ActivityRecord> recordsPage = activityRecordRepository
+                    .findByUserIdAndActivityIdAndExecutedAtRange(userId, activityId, fromInstant, toInstant, 
+                            PageRequest.of(0, Integer.MAX_VALUE));
+            
+            List<ActivityRecord> recordsInRange = recordsPage.getContent();
+            
+            // Filter out records with duration (completed records only)
+            List<ActivityRecord> completedRecords = recordsInRange.stream()
+                    .filter(record -> record.getDuration() != null)
+                    .collect(Collectors.toList());
+            
+            log.info("Found {} completed records in date range for activity: {}", completedRecords.size(), activityId);
+            
+            // Calculate average and max duration
+            Integer avgDurationSec = 0;
+            Integer maxSingleDurationSec = 0;
+            
+            if (!completedRecords.isEmpty()) {
+                avgDurationSec = (int) completedRecords.stream()
+                        .mapToInt(ActivityRecord::getDuration)
+                        .average()
+                        .orElse(0.0);
+                
+                maxSingleDurationSec = completedRecords.stream()
+                        .mapToInt(ActivityRecord::getDuration)
+                        .max()
+                        .orElse(0);
+            }
+            
+            // 2. Calculate week-over-week change
             ZonedDateTime now = ZonedDateTime.now(TAIPEI_ZONE);
             ZonedDateTime currentWeekStart = now.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
                     .truncatedTo(ChronoUnit.DAYS);
@@ -425,22 +460,17 @@ public class StatisticsService {
             ZonedDateTime previousWeekStart = currentWeekStart.minusWeeks(1);
             ZonedDateTime previousWeekEnd = currentWeekStart;
             
-            log.info("Getting activity KPIs for activity: {}, from: {}, to: {}", 
-                    activityId, fromDate, toDate);
+            // Get current week and previous week totals (in minutes, convert to seconds)
+            Long currentWeekMinutes = activityRecordRepository.getActivityMinutesInRange(
+                    activityId, currentWeekStart.toInstant(), currentWeekEnd.toInstant());
+            Long previousWeekMinutes = activityRecordRepository.getActivityMinutesInRange(
+                    activityId, previousWeekStart.toInstant(), previousWeekEnd.toInstant());
             
-            Object[] result = activityRecordRepository.getActivityKPIs(
-                    activityId, fromInstant, toInstant,
-                    currentWeekStart.toInstant(), currentWeekEnd.toInstant(),
-                    previousWeekStart.toInstant(), previousWeekEnd.toInstant());
+            Long currentWeekTotal = currentWeekMinutes * 60; // Convert to seconds
+            Long previousWeekTotal = previousWeekMinutes * 60; // Convert to seconds
             
-            if (result == null || result.length < 4) {
-                return new ActivityKPIs(0, 0, 0.0);
-            }
-            
-            Integer avgDurationSec = ((Number) result[0]).intValue();
-            Integer maxSingleDurationSec = ((Number) result[1]).intValue();
-            Long currentWeekTotal = ((Number) result[2]).longValue();
-            Long previousWeekTotal = ((Number) result[3]).longValue();
+            log.info("Week comparison - current: {}min ({}sec), previous: {}min ({}sec)", 
+                    currentWeekMinutes, currentWeekTotal, previousWeekMinutes, previousWeekTotal);
             
             // Calculate week-over-week change percentage
             Double weekOverWeekChangePct = 0.0;
@@ -452,10 +482,13 @@ public class StatisticsService {
                 weekOverWeekChangePct = 1.0; // 100% increase from 0
             }
             
+            log.info("Activity KPIs calculated - avg: {}s, max: {}s, weekChange: {}%", 
+                    avgDurationSec, maxSingleDurationSec, weekOverWeekChangePct * 100);
+            
             return new ActivityKPIs(avgDurationSec, maxSingleDurationSec, weekOverWeekChangePct);
             
         } catch (Exception e) {
-            log.error("Error getting activity KPIs", e);
+            log.error("Error getting activity KPIs for activity: {}, user: {}", activityId, userId, e);
             throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
         }
     }

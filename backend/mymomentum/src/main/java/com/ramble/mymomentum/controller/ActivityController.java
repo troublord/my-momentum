@@ -193,11 +193,11 @@ public class ActivityController {
             Authentication authentication,
             @Parameter(description = "活動ID") @PathVariable("id") UUID id,
             @Parameter(description = "開始日期 (YYYY-MM-DD)", required = true, example = "2025-09-01") 
-            @RequestParam String from,
+            @RequestParam(name = "from") String from,
             @Parameter(description = "結束日期 (YYYY-MM-DD)", required = true, example = "2025-09-30") 
-            @RequestParam String to,
+            @RequestParam(name = "to") String to,
             @Parameter(description = "時間粒度", required = true, example = "day") 
-            @RequestParam String grain) {
+            @RequestParam(name = "grain") String grain) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Getting activity distribution for activity: {}, user: {}, from: {}, to: {}, grain: {}", 
@@ -231,11 +231,11 @@ public class ActivityController {
             Authentication authentication,
             @Parameter(description = "活動ID") @PathVariable("id") UUID id,
             @Parameter(description = "開始日期 (YYYY-MM-DD)", required = true, example = "2025-06-15") 
-            @RequestParam String from,
+            @RequestParam(name = "from") String from,
             @Parameter(description = "結束日期 (YYYY-MM-DD)", required = true, example = "2025-09-09") 
-            @RequestParam String to,
+            @RequestParam(name = "to") String to,
             @Parameter(description = "時間粒度 (week|month)", required = true, example = "week") 
-            @RequestParam String grain) {
+            @RequestParam(name = "grain") String grain) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Getting activity trend for activity: {}, user: {}, from: {}, to: {}, grain: {}", 
@@ -269,9 +269,9 @@ public class ActivityController {
             Authentication authentication,
             @Parameter(description = "活動ID") @PathVariable("id") UUID id,
             @Parameter(description = "開始日期 (YYYY-MM-DD)", required = true, example = "2025-09-02") 
-            @RequestParam String from,
+            @RequestParam(name = "from") String from,
             @Parameter(description = "結束日期 (YYYY-MM-DD)", required = true, example = "2025-09-09") 
-            @RequestParam String to) {
+            @RequestParam(name = "to") String to) {
         
         Long userId = (Long) authentication.getPrincipal();
         log.info("Getting activity KPIs for activity: {}, user: {}, from: {}, to: {}", 
