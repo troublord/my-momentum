@@ -7,7 +7,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ErrorProvider } from "./contexts/ErrorContext";
 
-// 直接啟動應用，不再使用 MSW mock
+// 直接啟動應用，使用真實後端 API
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );

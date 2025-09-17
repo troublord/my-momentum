@@ -122,13 +122,19 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
   const fetchKpis = useCallback(async () => {
     setKpisLoading(true);
     try {
+      console.log("🔍 獲取 KPI 數據...", {
+        activityId,
+        from: controls.fromDate,
+        to: controls.toDate,
+      });
       const data = await getKpis(activityId, {
         from: controls.fromDate,
         to: controls.toDate,
       });
+      console.log("✅ KPI 數據獲取成功:", data);
       setKpisData(data);
     } catch (error) {
-      console.error("Failed to fetch KPIs data:", error);
+      console.error("❌ 獲取 KPI 數據失敗:", error);
       setKpisData(null);
       addError({
         type: "error",
@@ -170,13 +176,35 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
     }));
   };
 
-  // Format date labels
+  // Format date labels based on grain
   const formatDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("zh-TW", {
-      month: "short",
-      day: "numeric",
-    });
+
+    switch (controls.grain) {
+      case "day":
+        return date.toLocaleDateString("zh-TW", {
+          month: "short",
+          day: "numeric",
+        });
+      case "week":
+        // 顯示週的開始日期
+        const weekStart = new Date(date);
+        const dayOfWeek = weekStart.getDay();
+        const diff =
+          weekStart.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // 週一為開始
+        weekStart.setDate(diff);
+        return `${weekStart.getMonth() + 1}/${weekStart.getDate()}`;
+      case "month":
+        return date.toLocaleDateString("zh-TW", {
+          year: "numeric",
+          month: "short",
+        });
+      default:
+        return date.toLocaleDateString("zh-TW", {
+          month: "short",
+          day: "numeric",
+        });
+    }
   };
 
   // Format duration for display
@@ -302,7 +330,11 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
         />
         <KpiCard
           title="週環比變化"
-          value={kpisData ? formatDuration(kpisData.avgDurationSec) : "--"}
+          value={
+            kpisData
+              ? `${(kpisData.weekOverWeekChangePct * 100).toFixed(1)}%`
+              : "--"
+          }
           change={kpisData?.weekOverWeekChangePct}
           loading={kpisLoading}
           icon="📈"
