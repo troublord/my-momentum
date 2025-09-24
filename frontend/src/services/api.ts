@@ -8,13 +8,18 @@ export const useApi = () => {
   const { accessToken, logout } = useAuth();
   const { addError } = useError();
 
-  const headers: HeadersInit = useMemo(
-    () => ({
+  const headers: HeadersInit = useMemo(() => {
+    const headersObj = {
       "Content-Type": "application/json",
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    }),
-    [accessToken]
-  );
+    };
+    console.log("🔧 Headers updated:", {
+      hasToken: !!accessToken,
+      tokenLength: accessToken?.length || 0,
+      headers: headersObj,
+    });
+    return headersObj;
+  }, [accessToken]);
 
   const handleAuthError = useCallback(() => {
     logout();
@@ -62,6 +67,10 @@ export const useApi = () => {
   const get = useCallback(
     async <T>(endpoint: string): Promise<T | null> => {
       try {
+        console.log(`🔍 API GET ${endpoint}`, {
+          hasToken: !!accessToken,
+          headers: headers,
+        });
         const res = await fetch(`${API_BASE}${endpoint}`, { headers });
         if (res.status === 401 || res.status === 403) {
           handleAuthError();
@@ -80,7 +89,7 @@ export const useApi = () => {
         throw error;
       }
     },
-    [headers, handleApiError, handleAuthError]
+    [headers, handleApiError, handleAuthError, accessToken]
   );
 
   const post = useCallback(

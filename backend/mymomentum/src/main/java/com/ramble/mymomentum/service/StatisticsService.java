@@ -172,7 +172,6 @@ public class StatisticsService {
     }
 
     // Private helper methods
-
     private Summary calculateSummary(Long userId, PeriodInfo periodInfo) {
         // 1. Calculate total time
         Long totalMinutes = activityRecordRepository.getTotalMinutesInRange(

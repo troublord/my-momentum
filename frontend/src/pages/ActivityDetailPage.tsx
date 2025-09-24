@@ -3,12 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Activity } from "../types";
 import { useActivities } from "../services/activities";
 import { useRecords } from "../services/records";
+import { useAuth } from "../contexts/AuthContext";
 import ActivityDetailCharts from "../components/activity/ActivityDetailCharts";
 import ErrorContainer from "../components/ErrorContainer";
 
 const ActivityDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const { getActivity } = useActivities();
   const { listRecords } = useRecords();
 
@@ -23,10 +25,17 @@ const ActivityDetailPage: React.FC = () => {
       return;
     }
 
+    // 只有在已認證時才執行 API 請求
+    if (!isAuthenticated) {
+      console.log("🔐 Not authenticated yet, skipping API calls");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
+      console.log("🔍 Fetching activity data...");
       // Fetch activity details
       const activityData = await getActivity(id);
       if (!activityData) {
@@ -50,8 +59,7 @@ const ActivityDetailPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, navigate]);
+  }, [id, navigate, isAuthenticated]);
 
   useEffect(() => {
     fetchActivityData();

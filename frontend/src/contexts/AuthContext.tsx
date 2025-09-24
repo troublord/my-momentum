@@ -28,16 +28,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log("🔐 AuthContext: Initializing...");
     const saved = localStorage.getItem("mm_access_token");
+    console.log("🔐 AuthContext: Saved token exists:", !!saved);
     if (!saved) return;
     try {
       const decoded = jwtDecode<DecodedJwt>(saved);
       if (decoded?.exp && decoded.exp * 1000 < Date.now()) {
+        console.log("🔐 AuthContext: Token expired, removing...");
         localStorage.removeItem("mm_access_token");
         return;
       }
+      console.log("🔐 AuthContext: Token valid, setting state");
       setAccessTokenState(saved);
-    } catch {
+    } catch (error) {
+      console.log("🔐 AuthContext: Token invalid, removing...", error);
       localStorage.removeItem("mm_access_token");
     }
   }, []);
