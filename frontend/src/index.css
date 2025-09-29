@@ -23,6 +23,23 @@
   .link {
     @apply text-primary-600 hover:text-primary-700 underline-offset-2 hover:underline;
   }
+
+  /* Slider 樣式 */
+  .slider::-webkit-slider-thumb {
+    @apply appearance-none w-4 h-4 bg-blue-600 rounded-full cursor-pointer;
+  }
+
+  .slider::-webkit-slider-track {
+    @apply bg-gray-200 rounded-lg h-2;
+  }
+
+  .slider::-moz-range-thumb {
+    @apply w-4 h-4 bg-blue-600 rounded-full cursor-pointer border-0;
+  }
+
+  .slider::-moz-range-track {
+    @apply bg-gray-200 rounded-lg h-2 border-0;
+  }
 }
 
 @layer utilities {

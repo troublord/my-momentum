@@ -29,18 +29,34 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
   onSubmit,
 }) => {
   const [name, setName] = useState("");
-  const [targetTime, setTargetTime] = useState("");
+  const [hours, setHours] = useState<number | "other">(0);
+  const [customHours, setCustomHours] = useState("");
+  const [minutes, setMinutes] = useState(0);
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
   const [selectedIcon, setSelectedIcon] = useState<ActivityIconType>(
     PRESET_ICONS[0]
   );
 
+  // 計算總分鐘數
+  const getTotalMinutes = (): number => {
+    const hoursValue = hours === "other" ? parseInt(customHours) || 0 : hours;
+    return hoursValue * 60 + minutes;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    const totalMinutes = getTotalMinutes();
+    
+    // 驗證總時間至少1分鐘
+    if (totalMinutes < 1) {
+      alert("每週目標時間至少需要1分鐘");
+      return;
+    }
+
     const newActivity: Omit<Activity, "id"> = {
       name,
-      targetTime: parseInt(targetTime),
+      targetTime: totalMinutes,
       totalTime: 0,
       weeklyTime: 0,
       color: selectedColor,
@@ -53,7 +69,9 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
 
   const handleClose = () => {
     setName("");
-    setTargetTime("");
+    setHours(0);
+    setCustomHours("");
+    setMinutes(0);
     setSelectedColor(PRESET_COLORS[0]);
     setSelectedIcon(PRESET_ICONS[0]);
     onClose();
@@ -87,21 +105,73 @@ const CreateActivityModal: React.FC<CreateActivityModalProps> = ({
 
           {/* 每週目標時間 */}
           <div className="mb-4">
-            <label
-              htmlFor="targetTime"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              每週目標時間（分鐘）
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              每週目標時間
             </label>
-            <input
-              type="number"
-              id="targetTime"
-              value={targetTime}
-              onChange={(e) => setTargetTime(e.target.value)}
-              min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+            
+            <div className="flex gap-4">
+              {/* 小時選擇 */}
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">小時</label>
+                <select
+                  value={hours}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "other") {
+                      setHours("other");
+                    } else {
+                      setHours(parseInt(value));
+                    }
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={0}>0</option>
+                  {Array.from({ length: 28 }, (_, i) => i + 1).map((hour) => (
+                    <option key={hour} value={hour}>
+                      {hour}
+                    </option>
+                  ))}
+                  <option value="other">其他</option>
+                </select>
+                
+                {/* 自訂小時輸入欄位 */}
+                {hours === "other" && (
+                  <input
+                    type="number"
+                    value={customHours}
+                    onChange={(e) => setCustomHours(e.target.value)}
+                    min="0"
+                    placeholder="輸入小時數"
+                    className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                )}
+              </div>
+              
+              {/* 分鐘選擇 */}
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">
+                  分鐘: {minutes}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="59"
+                  value={minutes}
+                  onChange={(e) => setMinutes(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>0</span>
+                  <span>30</span>
+                  <span>59</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* 總計顯示 */}
+            <div className="mt-2 text-sm text-gray-600">
+              總計：{getTotalMinutes()} 分鐘
+            </div>
           </div>
 
           {/* 顏色選擇 */}
