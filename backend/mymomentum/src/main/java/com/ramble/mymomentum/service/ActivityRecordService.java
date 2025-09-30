@@ -30,12 +30,16 @@ public class ActivityRecordService {
 
     private final ActivityRecordRepository activityRecordRepository;
     private final ActivityRepository activityRepository;
+    private final CacheEvictionService cacheEvictionService;
 
     /**
      * Create a new activity record
      */
     public RecordResponse createRecord(Long userId, RecordCreateRequest request) {
         log.info("Creating record for user: {}, activity: {}, source: {}", userId, request.getActivityId(), request.getSource());
+        
+        // Evict cache for this specific activity
+        cacheEvictionService.evictByActivityId(request.getActivityId());
         
         // Validate business rules
         validateCreateRequest(request);
@@ -78,6 +82,9 @@ public class ActivityRecordService {
         ActivityRecord record = activityRecordRepository.findByIdAndUserId(recordId, userId)
                 .orElseThrow(() -> new NotFoundException("Record not found or does not belong to user"));
         
+        // Evict cache for this specific activity
+        cacheEvictionService.evictByActivityId(record.getActivityId());
+        
         // Validate it's a running LIVE record
         if (record.getSource() != RecordSource.LIVE || record.getDuration() != null) {
             throw new ConflictException("Record is not a running LIVE record");
@@ -114,6 +121,12 @@ public class ActivityRecordService {
         ActivityRecord record = activityRecordRepository.findByIdAndUserId(recordId, userId)
                 .orElseThrow(() -> new NotFoundException("Record not found or does not belong to user"));
         
+        // Evict cache for both old and new activity (if activity changed)
+        cacheEvictionService.evictByActivityId(record.getActivityId());
+        if (!record.getActivityId().equals(request.getActivityId())) {
+            cacheEvictionService.evictByActivityId(request.getActivityId());
+        }
+        
         // Validate record can be updated
         if (record.getSource() == RecordSource.LIVE && record.getDuration() == null) {
             throw new ConflictException("Cannot update a running LIVE record. Use finish endpoint or delete and recreate.");
@@ -146,6 +159,9 @@ public class ActivityRecordService {
         
         ActivityRecord record = activityRecordRepository.findByIdAndUserId(recordId, userId)
                 .orElseThrow(() -> new NotFoundException("Record not found or does not belong to user"));
+        
+        // Evict cache for this specific activity
+        cacheEvictionService.evictByActivityId(record.getActivityId());
         
         activityRecordRepository.delete(record);
         log.info("Successfully deleted record: {}", recordId);

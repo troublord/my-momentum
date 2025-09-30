@@ -33,13 +33,21 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
   const hasCheckedRunningRecords = useRef<boolean>(false);
 
   // Manual recording state
-  const [manualDuration, setManualDuration] = useState(30);
+  const [manualHours, setManualHours] = useState<number | "other">(0);
+  const [manualCustomHours, setManualCustomHours] = useState("");
+  const [manualMinutes, setManualMinutes] = useState(30);
   const [manualDate, setManualDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [manualTime, setManualTime] = useState("");
 
   const isRecording = currentRecordId !== null;
+
+  // 計算總分鐘數
+  const getManualTotalMinutes = (): number => {
+    const hoursValue = manualHours === "other" ? parseInt(manualCustomHours) || 0 : manualHours;
+    return hoursValue * 60 + manualMinutes;
+  };
 
   // 檢查並恢復正在進行的記錄狀態（使用 ref 防止重複調用）
   useEffect(() => {
@@ -303,12 +311,26 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
   const handleSaveManualRecord = async () => {
     if (!selectedActivity || loading) return;
 
+    const totalMinutes = getManualTotalMinutes();
+    
+    // 驗證總時間至少1分鐘
+    if (totalMinutes < 1) {
+      addError({
+        type: "warning",
+        title: "時間不足",
+        message: "記錄時間至少需要1分鐘",
+        autoHide: true,
+        autoHideDelay: 3000,
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const executedAtISO = buildExecutedAtISO(manualDate, manualTime);
       const record = await createManualRecord(
         selectedActivity,
-        manualDuration,
+        totalMinutes,
         executedAtISO
       );
 
@@ -316,13 +338,15 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
         addError({
           type: "info",
           title: "紀錄已儲存",
-          message: `已記錄 ${manualDuration} 分鐘`,
+          message: `已記錄 ${totalMinutes} 分鐘`,
           autoHide: true,
           autoHideDelay: 3000,
         });
 
         // Reset form
-        setManualDuration(30);
+        setManualHours(0);
+        setManualCustomHours("");
+        setManualMinutes(30);
         setManualDate(new Date().toISOString().split("T")[0]);
         setManualTime("");
 
@@ -430,16 +454,75 @@ const RecordPanel: React.FC<RecordPanelProps> = ({ activities, onCreated }) => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              時間（分鐘）
+              記錄時間
             </label>
-            <input
-              type="number"
-              value={manualDuration}
-              onChange={(e) => setManualDuration(parseInt(e.target.value) || 0)}
-              min="1"
-              disabled={loading}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50"
-            />
+            
+            <div className="flex gap-4">
+              {/* 小時選擇 */}
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">小時</label>
+                <select
+                  value={manualHours}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "other") {
+                      setManualHours("other");
+                    } else {
+                      setManualHours(parseInt(value));
+                    }
+                  }}
+                  disabled={loading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                >
+                  <option value={0}>0</option>
+                  {Array.from({ length: 28 }, (_, i) => i + 1).map((hour) => (
+                    <option key={hour} value={hour}>
+                      {hour}
+                    </option>
+                  ))}
+                  <option value="other">其他</option>
+                </select>
+                
+                {/* 自訂小時輸入欄位 */}
+                {manualHours === "other" && (
+                  <input
+                    type="number"
+                    value={manualCustomHours}
+                    onChange={(e) => setManualCustomHours(e.target.value)}
+                    min="0"
+                    placeholder="輸入小時數"
+                    disabled={loading}
+                    className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                  />
+                )}
+              </div>
+              
+              {/* 分鐘選擇 */}
+              <div className="flex-1">
+                <label className="block text-xs text-gray-500 mb-1">
+                  分鐘: {manualMinutes}
+                </label>
+                <input
+                  type="range"
+                  min="0"
+                  max="59"
+                  value={manualMinutes}
+                  onChange={(e) => setManualMinutes(parseInt(e.target.value))}
+                  disabled={loading}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider disabled:opacity-50"
+                />
+                <div className="flex justify-between text-xs text-gray-400 mt-1">
+                  <span>0</span>
+                  <span>30</span>
+                  <span>59</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* 總計顯示 */}
+            <div className="mt-2 text-sm text-gray-600">
+              總計：{getManualTotalMinutes()} 分鐘
+            </div>
           </div>
 
           <div>

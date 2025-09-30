@@ -27,6 +27,7 @@ public class ActivityService {
 
     private final ActivityRepository activityRepository;
     private final ActivityRecordRepository activityRecordRepository;
+    private final CacheEvictionService cacheEvictionService;
 
     /**
      * 建立新活動
@@ -113,6 +114,9 @@ public class ActivityService {
         log.info("Updating activity: {} for user: {}", activityId, userId);
 
         Activity activity = getActivityByIdAndUserId(activityId, userId);
+        
+        // Evict cache for this specific activity
+        cacheEvictionService.evictByActivityId(activityId);
 
         // Check if new name conflicts with existing activity
         if (name != null && !name.equals(activity.getName()) &&
@@ -148,6 +152,9 @@ public class ActivityService {
      */
     public void deleteActivity(UUID activityId, Long userId) {
         log.info("Deleting activity: {} for user: {}", activityId, userId);
+        
+        // Evict cache for this specific activity before deletion
+        cacheEvictionService.evictByActivityId(activityId);
 
         Activity activity = getActivityByIdAndUserId(activityId, userId);
         activityRepository.delete(activity);
