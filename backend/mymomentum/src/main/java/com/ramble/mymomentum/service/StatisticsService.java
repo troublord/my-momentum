@@ -356,8 +356,8 @@ public class StatisticsService {
         }
         
         // Validate grain
-        if (!List.of("week", "month").contains(grain)) {
-            throw new IllegalArgumentException("Invalid grain for trend. Must be 'week' or 'month'");
+        if (!List.of("day","week", "month").contains(grain)) {
+            throw new IllegalArgumentException("Invalid grain for trend. Must be one of these:'day' 'week' or 'month'");
         }
         
         try {

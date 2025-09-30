@@ -99,7 +99,7 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
       const data = await getTrend(activityId, {
         from: controls.fromDate,
         to: controls.toDate,
-        grain: "week", // Default to week for trend
+        grain: controls.grain
       });
       setTrendData(data || []);
     } catch (error) {
@@ -116,7 +116,7 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
       setTrendLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activityId, controls.fromDate, controls.toDate, addError]);
+  }, [activityId, controls.fromDate, controls.toDate, controls.grain, addError]);
 
   // Fetch KPIs data
   const fetchKpis = useCallback(async () => {

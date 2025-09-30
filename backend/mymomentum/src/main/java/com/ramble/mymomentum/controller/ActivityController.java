@@ -234,7 +234,7 @@ public class ActivityController {
             @RequestParam(name = "from") String from,
             @Parameter(description = "結束日期 (YYYY-MM-DD)", required = true, example = "2025-09-09") 
             @RequestParam(name = "to") String to,
-            @Parameter(description = "時間粒度 (week|month)", required = true, example = "week") 
+            @Parameter(description = "時間粒度 (day|week|month)", required = true, example = "week")
             @RequestParam(name = "grain") String grain) {
         
         Long userId = (Long) authentication.getPrincipal();

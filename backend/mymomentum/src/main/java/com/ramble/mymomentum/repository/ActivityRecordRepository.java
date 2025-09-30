@@ -218,7 +218,7 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
         WITH date_series AS (
             SELECT CAST(generate_series(
                 CAST(:fromDate AS date), 
-                CAST(:toDate AS date) - CAST('1 day' AS interval), 
+                CAST(:toDate AS date), 
                 CASE 
                     WHEN :grain = 'day' THEN CAST('1 day' AS interval)
                     WHEN :grain = 'week' THEN CAST('1 week' AS interval)
@@ -265,6 +265,7 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
         WITH base AS (
             SELECT
                 CASE
+                    WHEN :grain = 'day' THEN DATE_TRUNC('day', executed_at AT TIME ZONE :tz)
                     WHEN :grain = 'week' THEN DATE_TRUNC('week', executed_at AT TIME ZONE :tz)
                     WHEN :grain = 'month' THEN DATE_TRUNC('month', executed_at AT TIME ZONE :tz)
                 END AS bucket_start,

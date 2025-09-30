@@ -10,7 +10,7 @@ export interface DistributionQuery {
 export interface TrendQuery {
   from: string; // YYYY-MM-DD
   to: string; // YYYY-MM-DD
-  grain: "week" | "month"; // Only week or month for trend
+  grain: Grain; // Support all grain types for trend
 }
 
 export interface KpisQuery {
