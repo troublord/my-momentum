@@ -19,6 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -277,6 +281,71 @@ public class ActivityRecordService {
                 throw new BadRequestException("Duration must be null for LIVE records");
             }
         }
+    }
+
+    /**
+     * Get last day records for a user
+     */
+    @Transactional(readOnly = true)
+    public LastDayRecordsResponse getLastDayRecords(Long userId, String timezone) {
+        log.info("Getting last day records for user: {} with timezone: {}", userId, timezone);
+        
+        // Find the last date when user has activity records
+        String lastDate = activityRecordRepository.findLastRecordDateByUserId(userId, timezone);
+        
+        if (lastDate == null) {
+            // No records found, return empty response
+            return new LastDayRecordsResponse(
+                null, 
+                0, 
+                new ArrayList<>(), 
+                0
+            );
+        }
+        
+        // Get records for the last date
+        List<Object[]> recordData = activityRecordRepository.findRecordsByUserIdAndDate(userId, lastDate, timezone);
+        
+        // Get total duration for the last date
+        Long lastDateDuration = activityRecordRepository.getTotalDurationByUserIdAndDate(userId, lastDate, timezone);
+        
+        // Get today's total duration
+        Long todayDuration = activityRecordRepository.getTodayTotalDurationByUserId(userId, timezone);
+        
+        // Convert record data to DTO
+        List<LastDayRecordsResponse.LastDayRecordItem> records = new ArrayList<>();
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
+        ZoneId zoneId = ZoneId.of(timezone);
+        
+        for (Object[] row : recordData) {
+            // SQL query: SELECT ar.*, a.name as activity_name
+            // ar.* includes: id, user_id, activity_id, source, duration, executed_at, created_at, updated_at
+            // So: row[0] = id, row[1] = user_id, row[2] = activity_id, row[3] = source, 
+            // row[4] = duration, row[5] = executed_at, row[6] = created_at, row[7] = updated_at,
+            // row[8] = activity_name
+            String activityName = (String) row[8];
+            String sourceStr = (String) row[3];
+            RecordSource source = RecordSource.valueOf(sourceStr);
+            Integer duration = (Integer) row[4];
+            Instant executedAt = (Instant) row[5];
+            
+            // Convert executedAt to local time in the specified timezone
+            LocalTime recordTime = executedAt.atZone(zoneId).toLocalTime();
+            
+            records.add(new LastDayRecordsResponse.LastDayRecordItem(
+                activityName,
+                recordTime.format(timeFormatter),
+                duration,
+                source
+            ));
+        }
+        
+        return new LastDayRecordsResponse(
+            lastDate,
+            lastDateDuration.intValue(),
+            records,
+            todayDuration.intValue()
+        );
     }
 
     private RecordResponse mapToResponse(ActivityRecord record) {

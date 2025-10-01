@@ -293,4 +293,61 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
                                   @Param("tz") String tz);
     
     // Note: getActivityKPIs method removed - now using simpler approach in StatisticsService
+    
+    /**
+     * Find the last date when user has activity records (based on executedAt)
+     * Excludes today's date, returns the date as string in YYYY-MM-DD format
+     */
+    @Query(value = """
+        SELECT TO_CHAR(MAX(DATE(executed_at AT TIME ZONE :timezone)), 'YYYY-MM-DD') as last_date
+        FROM activity_records 
+        WHERE user_id = :userId
+          AND DATE(executed_at AT TIME ZONE :timezone) < CURRENT_DATE
+        """, nativeQuery = true)
+    String findLastRecordDateByUserId(@Param("userId") Long userId, @Param("timezone") String timezone);
+    
+    /**
+     * Find all records for a user on a specific date (based on executedAt)
+     * Returns records ordered by createdAt ASC
+     */
+    @Query(value = """
+        SELECT ar.*, a.name as activity_name
+        FROM activity_records ar
+        JOIN activities a ON ar.activity_id = a.id
+        WHERE ar.user_id = :userId
+          AND DATE(ar.executed_at AT TIME ZONE :timezone) = CAST(:date AS date)
+          AND ar.duration IS NOT NULL
+        ORDER BY ar.created_at ASC
+        """, nativeQuery = true)
+    List<Object[]> findRecordsByUserIdAndDate(@Param("userId") Long userId, 
+                                            @Param("date") String date, 
+                                            @Param("timezone") String timezone);
+    
+    /**
+     * Calculate total duration for a user on a specific date
+     * Returns total duration in seconds
+     */
+    @Query(value = """
+        SELECT COALESCE(SUM(duration), 0)
+        FROM activity_records 
+        WHERE user_id = :userId
+          AND DATE(executed_at AT TIME ZONE :timezone) = CAST(:date AS date)
+          AND duration IS NOT NULL
+        """, nativeQuery = true)
+    Long getTotalDurationByUserIdAndDate(@Param("userId") Long userId, 
+                                       @Param("date") String date, 
+                                       @Param("timezone") String timezone);
+    
+    /**
+     * Calculate total duration for a user today
+     * Returns total duration in seconds
+     */
+    @Query(value = """
+        SELECT COALESCE(SUM(duration), 0)
+        FROM activity_records 
+        WHERE user_id = :userId
+          AND DATE(executed_at AT TIME ZONE :timezone) = CURRENT_DATE
+          AND duration IS NOT NULL
+        """, nativeQuery = true)
+    Long getTodayTotalDurationByUserId(@Param("userId") Long userId, @Param("timezone") String timezone);
 }

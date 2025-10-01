@@ -236,4 +236,27 @@ public class ActivityRecordController {
         PagedRecordResponse records = activityRecordService.listRunningRecords(userId);
         return ResponseEntity.ok(records);
     }
+
+    @GetMapping("/last-day")
+    @Operation(
+        summary = "獲取最後一次活動日記錄",
+        description = "獲取用戶最後一次有活動紀錄的日期的所有活動紀錄，並比較今日總時長"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "最後活動日記錄獲取成功",
+            content = @Content(schema = @Schema(implementation = LastDayRecordsResponse.class))
+        )
+    })
+    public ResponseEntity<LastDayRecordsResponse> getLastDayRecords(
+            Authentication authentication,
+            @Parameter(description = "時區", example = "Asia/Taipei") 
+            @RequestParam(name = "timezone", defaultValue = "Asia/Taipei") String timezone) {
+        
+        Long userId = (Long) authentication.getPrincipal();
+        log.info("Getting last day records for user: {} with timezone: {}", userId, timezone);
+        LastDayRecordsResponse response = activityRecordService.getLastDayRecords(userId, timezone);
+        return ResponseEntity.ok(response);
+    }
 }
