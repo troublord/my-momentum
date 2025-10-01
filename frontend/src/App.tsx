@@ -8,12 +8,14 @@ import CreateActivityModal from "./components/CreateActivityModal";
 import EditActivityModal from "./components/EditActivityModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import ErrorContainer from "./components/ErrorContainer";
+import LastDayRecordsCard from "./components/LastDayRecordsCard";
 import ActivityDetailPage from "./pages/ActivityDetailPage";
-import { Activity, Summary } from "./types";
+import { Activity, Summary, LastDayRecordsResponse } from "./types";
 import IntroPage from "./components/IntroPage";
 import { useAuth } from "./contexts/AuthContext";
 import { useActivities } from "./services/activities";
 import { useStatistics } from "./services/statistics";
+import { useLastDayRecords } from "./services/lastDayRecords";
 import { useError } from "./contexts/ErrorContext";
 
 const HomePage: React.FC = () => {
@@ -22,6 +24,7 @@ const HomePage: React.FC = () => {
   const { getActivities, createActivity, updateActivity, deleteActivity } =
     useActivities();
   const { getSummary } = useStatistics();
+  const { getLastDayRecords } = useLastDayRecords();
   const { addError } = useError();
 
   const [activities, setActivities] = useState<Activity[]>([]);
@@ -31,6 +34,8 @@ const HomePage: React.FC = () => {
     console.log("🔄 Activities State Updated:", activities);
   }, [activities]);
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [lastDayRecords, setLastDayRecords] = useState<LastDayRecordsResponse | null>(null);
+  const [lastDayRecordsError, setLastDayRecordsError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -43,9 +48,10 @@ const HomePage: React.FC = () => {
     if (isAuthenticated) {
       const fetchData = async () => {
         try {
-          const [activitiesData, summaryData] = await Promise.all([
+          const [activitiesData, summaryData, lastDayData] = await Promise.all([
             getActivities(),
             getSummary(),
+            getLastDayRecords(),
           ]);
 
           if (activitiesData) {
@@ -56,8 +62,16 @@ const HomePage: React.FC = () => {
             console.log("📈 Fetched Summary:", summaryData);
             setSummary(summaryData);
           }
+          if (lastDayData) {
+            console.log("📅 Fetched Last Day Records:", lastDayData);
+            setLastDayRecords(lastDayData);
+            setLastDayRecordsError(false);
+          } else {
+            setLastDayRecordsError(true);
+          }
         } catch (error) {
           console.error("Failed to fetch data:", error);
+          setLastDayRecordsError(true);
           addError({
             type: "error",
             title: "載入資料失敗",
@@ -191,16 +205,26 @@ const HomePage: React.FC = () => {
                 onDeleteActivity={handleDeleteActivity}
               />
             </div>
+            
+            {/* 手機版：上次活動日資訊卡 */}
+            <div className="lg:hidden mt-6">
+              <LastDayRecordsCard
+                data={lastDayRecords}
+                loading={loading}
+                error={lastDayRecordsError}
+              />
+            </div>
           </div>
           <div className="hidden lg:block">
             <RecordPanel
               activities={activities}
               onCreated={async () => {
-                // Refresh both activities and summary data after record creation
+                // Refresh activities, summary, and last day records data after record creation
                 try {
-                  const [activitiesData, summaryData] = await Promise.all([
+                  const [activitiesData, summaryData, lastDayData] = await Promise.all([
                     getActivities(),
                     getSummary(),
+                    getLastDayRecords(),
                   ]);
 
                   if (activitiesData) {
@@ -218,8 +242,20 @@ const HomePage: React.FC = () => {
                     );
                     setSummary(summaryData);
                   }
+
+                  if (lastDayData) {
+                    console.log(
+                      "📅 Refreshed last day records after record creation:",
+                      lastDayData
+                    );
+                    setLastDayRecords(lastDayData);
+                    setLastDayRecordsError(false);
+                  } else {
+                    setLastDayRecordsError(true);
+                  }
                 } catch (error) {
                   console.error("Failed to refresh data:", error);
+                  setLastDayRecordsError(true);
                   addError({
                     type: "warning",
                     title: "資料更新失敗",
@@ -230,6 +266,15 @@ const HomePage: React.FC = () => {
                 }
               }}
             />
+            
+            {/* 桌面版：上次活動日資訊卡 */}
+            <div className="mt-6">
+              <LastDayRecordsCard
+                data={lastDayRecords}
+                loading={loading}
+                error={lastDayRecordsError}
+              />
+            </div>
           </div>
         </div>
       </div>

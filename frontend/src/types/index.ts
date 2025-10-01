@@ -79,3 +79,18 @@ export interface WeeklyTrendResponse {
     }[];
   }[];
 }
+
+// Last Day Records Types
+export interface LastDayRecord {
+  activityName: string;
+  recordTime: string; // HH:mm format
+  duration: number; // seconds (實際 API 回傳的是秒數)
+  source: "LIVE" | "MANUAL";
+}
+
+export interface LastDayRecordsResponse {
+  lastDate: string; // YYYY-MM-DD format (實際 API 欄位名稱)
+  lastDateDuration: number; // seconds (實際 API 回傳的是秒數)
+  records: LastDayRecord[];
+  todayDuration: number; // seconds (實際 API 回傳的是秒數)
+}
