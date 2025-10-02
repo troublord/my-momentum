@@ -66,7 +66,7 @@ public class StatisticsService {
             return calculateSummary(userId, periodInfo);
         } catch (Exception e) {
             log.error("Error parsing date range: {} to {}", startDate, endDate, e);
-            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
+            throw new IllegalArgumentException("Error parsing date range: " + e.getMessage());
         }
     }
 
@@ -338,7 +338,7 @@ public class StatisticsService {
                     
         } catch (Exception e) {
             log.error("Error getting activity distribution", e);
-            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
+            throw new IllegalArgumentException("Error getting activity distribution: " + e.getMessage());
         }
     }
     
@@ -390,7 +390,7 @@ public class StatisticsService {
                     
         } catch (Exception e) {
             log.error("Error getting activity trend", e);
-            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
+            throw new IllegalArgumentException("Error getting activity trend: " + e.getMessage());
         }
     }
     
@@ -488,7 +488,7 @@ public class StatisticsService {
             
         } catch (Exception e) {
             log.error("Error getting activity KPIs for activity: {}, user: {}", activityId, userId, e);
-            throw new IllegalArgumentException("Invalid date format. Use YYYY-MM-DD format.");
+            throw new IllegalArgumentException("Error getting activity KPIs: " + e.getMessage());
         }
     }
     
