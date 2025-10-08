@@ -46,21 +46,29 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     
+    // Helper function to format date as YYYY-MM-DD without timezone issues
+    const formatDate = (date: Date): string => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+    
     switch (range) {
       case 'last7days':
         const last7Days = new Date(today);
         last7Days.setDate(today.getDate() - 6); // 包含今天，所以是7天
         return {
-          fromDate: last7Days.toISOString().split('T')[0],
-          toDate: today.toISOString().split('T')[0]
+          fromDate: formatDate(last7Days),
+          toDate: formatDate(today)
         };
       
       case 'last30days':
         const last30Days = new Date(today);
         last30Days.setDate(today.getDate() - 29); // 包含今天，所以是30天
         return {
-          fromDate: last30Days.toISOString().split('T')[0],
-          toDate: today.toISOString().split('T')[0]
+          fromDate: formatDate(last30Days),
+          toDate: formatDate(today)
         };
       
       case 'currentMonth':
@@ -69,23 +77,23 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
         const firstDay = new Date(year, month, 1);
         const lastDay = new Date(year, month + 1, 0);
         return {
-          fromDate: firstDay.toISOString().split('T')[0],
-          toDate: lastDay.toISOString().split('T')[0]
+          fromDate: formatDate(firstDay),
+          toDate: formatDate(lastDay)
         };
       
       case 'last3months':
         const last3Months = new Date(today);
         last3Months.setMonth(today.getMonth() - 3);
         return {
-          fromDate: last3Months.toISOString().split('T')[0],
-          toDate: today.toISOString().split('T')[0]
+          fromDate: formatDate(last3Months),
+          toDate: formatDate(today)
         };
       
       case 'custom':
       default:
         return {
-          fromDate: controls?.fromDate || today.toISOString().split('T')[0],
-          toDate: controls?.toDate || today.toISOString().split('T')[0]
+          fromDate: controls?.fromDate || formatDate(today),
+          toDate: controls?.toDate || formatDate(today)
         };
     }
   };
