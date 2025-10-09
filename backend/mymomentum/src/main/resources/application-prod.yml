@@ -1,0 +1,117 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: mymomentum
+  datasource:
+    # 生產環境：使用 Docker 容器名稱作為主機名，標準 PostgreSQL 端口
+    url: jdbc:postgresql://postgres:5432/mymomentumdb
+    username: ${DB_USERNAME:mymomentum}
+    password: ${DB_PASSWORD:PgR7!vL2zT8sM0nQ}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      # 生產環境：增加連線池大小以應對更多併發
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    # 生產環境：關閉 SQL 日誌以提高效能
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        # 生產環境：移除 SQL 格式化以提高效能
+        # format_sql: true  # 開發環境有，生產環境移除
+        jdbc:
+          time_zone: UTC
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
+
+  # Cache Configuration (與開發環境相同)
+  cache:
+    type: simple
+    cache-names:
+      - activityDistribution
+      - activityTrend
+      - activityKPIs
+
+  # Flyway Configuration (與開發環境相同)
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    out-of-order: false
+    table: flyway_schema_history
+    baseline-version: 1
+    baseline-description: "Initial baseline"
+
+# Application Configuration
+app:
+  google:
+    oauth:
+      # 生產環境：使用環境變數，預設值為開發環境的值
+      clientId: ${GOOGLE_CLIENT_ID:861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com}
+  security:
+    jwt:
+      # 生產環境：使用環境變數，預設值為新的 JWT Secret
+      secret: ${JWT_SECRET:a911b1ec9e107e5127c9dd9b82abd1a9}
+      # 生產環境：延長 token 有效時間
+      expirationMinutes: 240
+  cors:
+    allowedOrigins:
+      # 生產環境：使用環境變數，預設為 EC2 IP
+      - ${FRONTEND_URL:http://your-ec2-ip}
+
+# 生產環境：調整日誌等級，減少詳細日誌
+logging:
+  file:
+    name: mymomentum.log
+    max-history: 30
+    max-file-size: 10MB
+  level:
+    # 生產環境：關閉詳細的 SQL 日誌
+    org.hibernate.SQL: WARN
+    # 生產環境：關閉 SQL 參數綁定日誌
+    # org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # 開發環境有，生產環境移除
+    # 生產環境：調整應用程式日誌等級
+    com.ramble.mymomentum: INFO
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        # 生產環境：只暴露必要的端點，移除 metrics 和 env
+        include: health,info
+        # include: health,info,metrics,env  # 開發環境有更多端點
+      base-path: /actuator
+  endpoint:
+    health:
+      # 生產環境：限制健康檢查詳細資訊
+      show-details: when-authorized
+      show-components: always
+    info:
+      enabled: true
+  info:
+    env:
+      enabled: true
+
+# OpenAPI/Swagger Configuration (與開發環境相同)
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  info:
+    title: MyMomentum API
+    description: Super momentum management API
+    version: 1.0.0
+    contact:
+      name: Ramble Team

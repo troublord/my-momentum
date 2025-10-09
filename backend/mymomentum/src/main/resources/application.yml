@@ -49,14 +49,14 @@ spring:
 app:
   google:
     oauth:
-      clientId: 861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com
+      clientId: ${GOOGLE_CLIENT_ID:861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com}
   security:
     jwt:
-      secret: U/tCUvHbDJMpu43mvYlAjG8j+3knvcP5L2L3DLU6In1+sxXLBWJMFuXlD2H+uXqj
+      secret: ${JWT_SECRET:U/tCUvHbDJMpu43mvYlAjG8j+3knvcP5L2L3DLU6In1+sxXLBWJMFuXlD2H+uXqj}
       expirationMinutes: 240
   cors:
     allowedOrigins:
-      - http://localhost:3000
+      - ${FRONTEND_URL:http://localhost:3000}
 
 logging:
   level:

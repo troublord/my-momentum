@@ -4,3 +4,7 @@ frontend/node_modules/.cache
 frontend/node_modules/.cache
 documents
 backend/mymomentum/start-smart.bat
+.idea
+backend/mymomentum/start-smart.bat
+env.prod
+mymomentum-key.pem
