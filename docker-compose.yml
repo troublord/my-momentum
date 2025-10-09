@@ -5,6 +5,8 @@ services:
     image: postgres:16
     container_name: mymomentum-postgres
     restart: unless-stopped
+    env_file:
+      - env.prod
     environment:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -26,6 +28,8 @@ services:
       dockerfile: Dockerfile
     container_name: mymomentum-backend
     restart: unless-stopped
+    env_file:
+      - env.prod
     environment:
       SPRING_PROFILES_ACTIVE: prod
       DB_USERNAME: ${DB_USERNAME}
