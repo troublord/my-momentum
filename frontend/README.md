@@ -125,7 +125,7 @@ frontend/
 - **React 18** - 現代化 React 框架
 - **TypeScript** - 型別安全的 JavaScript
 - **TailwindCSS** - 實用優先的 CSS 框架
-- **React Router** - 客戶端路由管理
+- **React Router v7** - 客戶端路由管理
 
 ### 狀態管理
 
@@ -144,11 +144,14 @@ frontend/
 - **@react-oauth/google** - Google OAuth 整合
 - **jwt-decode** - JWT 令牌解析
 - **MSW** - Mock Service Worker 開發環境模擬
+- **自定義 Hooks** - 封裝 API 調用邏輯
 
 ### 開發工具
 
 - **ESLint** - 程式碼品質檢查
 - **Prettier** - 程式碼格式化
+- **PostCSS** - CSS 後處理器
+- **Autoprefixer** - CSS 自動前綴
 
 ## 🔄 API 端點
 
@@ -174,9 +177,6 @@ DELETE /api/activities/{id}   # 刪除活動
 ```
 GET    /api/records           # 獲取記錄列表
 POST   /api/records           # 創建新記錄
-GET    /api/records/{id}      # 獲取單一記錄
-PUT    /api/records/{id}      # 更新記錄
-DELETE /api/records/{id}      # 刪除記錄
 PATCH  /api/records/{id}/finish # 完成即時記錄
 GET    /api/records/running   # 獲取進行中的記錄
 ```
@@ -187,9 +187,10 @@ GET    /api/records/running   # 獲取進行中的記錄
 GET /api/statistics/summary           # 獲取統計摘要
 GET /api/statistics/activities/{id}   # 獲取活動統計
 GET /api/statistics/weekly-trend      # 獲取週趨勢
+GET /api/statistics/last-day-records  # 獲取昨日記錄
 ```
 
-### 活動詳情分析 (新增)
+### 活動詳情分析
 
 ```
 GET /api/activities/{id}/distribution # 獲取活動分佈數據
@@ -251,6 +252,11 @@ GET /api/activities/{id}/kpis         # 獲取活動 KPI 指標
 - [x] 互動式圖表分析
 - [x] KPI 指標展示
 - [x] MSW 開發環境模擬
+- [x] React Router 客戶端路由
+- [x] 昨日記錄顯示
+- [x] 自定義 Hooks API 封裝
+- [x] 載入狀態管理
+- [x] 錯誤邊界處理
 
 ### 🚧 開發中功能
 
@@ -283,6 +289,7 @@ GET /api/activities/{id}/kpis         # 獲取活動 KPI 指標
 - **活動分佈**: `GET /api/activities/{id}/distribution`
 - **活動趨勢**: `GET /api/activities/{id}/trend`
 - **活動 KPI**: `GET /api/activities/{id}/kpis`
+- **昨日記錄**: `GET /api/statistics/last-day-records`
 
 #### 資料格式要求
 
@@ -345,7 +352,10 @@ npm run preview
 - ✨ 實現互動式圖表（分佈圖、趨勢圖）
 - ✨ 添加 KPI 指標展示（平均時長、最長記錄、週環比）
 - ✨ 整合 MSW 開發環境模擬
-- ✨ 新增 React Router 客戶端路由
+- ✨ 新增 React Router v7 客戶端路由
+- ✨ 新增昨日記錄顯示功能
+- ✨ 實現自定義 Hooks API 封裝
+- ✨ 完善錯誤邊界處理機制
 - 🐛 修復無限 API 調用問題
 - 🎨 完善響應式設計與載入狀態
 

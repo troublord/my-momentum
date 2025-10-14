@@ -19,10 +19,16 @@ MyMomentum is a backend service built with Spring Boot, providing a RESTful API 
 - **Java 17**
 - **Spring Boot 3.2.0**
 - **Spring Data JPA**
+- **Spring Security**
 - **PostgreSQL 16**
 - **Maven**
 - **Docker & Docker Compose**
 - **Lombok**
+- **JWT (JJWT)**
+- **Google OAuth 2.0**
+- **Flyway 資料庫遷移**
+- **Spring Cache (Caffeine)**
+- **Springdoc OpenAPI (Swagger)**
 
 ## 項目設置步驟
 
@@ -58,11 +64,17 @@ mymomentum/
 #### 核心依賴
 
 - **Spring Web** (`spring-boot-starter-web`) - 用於構建 Web 應用
+- **Spring Security** (`spring-boot-starter-security`) - 安全認證和授權
 - **Spring Data JPA** (`spring-boot-starter-data-jpa`) - 數據庫操作
 - **PostgreSQL Driver** (`postgresql`) - PostgreSQL 數據庫驅動
 - **Lombok** (`lombok`) - 減少樣板代碼
 - **Spring Boot Test** (`spring-boot-starter-test`) - 測試支持
 - **Springdoc OpenAPI** (`springdoc-openapi-starter-webmvc-ui`) - API 文檔和 Swagger UI
+- **Spring Cache** (`spring-boot-starter-cache`) - 快取支援
+- **Caffeine Cache** (`caffeine`) - 高效能快取實作
+- **Google API Client** (`google-api-client`) - Google OAuth 驗證
+- **JJWT** (`jjwt-*`) - JWT 令牌處理
+- **Flyway** (`flyway-core`) - 資料庫遷移管理
 
 ### 3. 數據庫配置
 
@@ -148,27 +160,53 @@ mymomentum/
 │   │   │               ├── MyMomentumApplication.java    # 主應用類
 │   │   │               ├── auth/                         # 認證相關
 │   │   │               │   ├── GoogleAuthController.java # Google OAuth 控制器
+│   │   │               │   ├── GoogleVerifierConfig.java # Google 驗證配置
+│   │   │               │   ├── JwtAuthFilter.java        # JWT 認證過濾器
 │   │   │               │   ├── JwtService.java           # JWT 服務
-│   │   │               │   └── ...
+│   │   │               │   └── MeController.java         # 用戶資訊控制器
+│   │   │               ├── config/                       # 配置類
+│   │   │               │   ├── AppConfig.java            # 應用配置
+│   │   │               │   ├── CacheConfig.java          # 快取配置
+│   │   │               │   ├── OpenAPIConfig.java        # OpenAPI 配置
+│   │   │               │   └── SecurityConfig.java       # 安全配置
 │   │   │               ├── controller/                   # REST 控制器
 │   │   │               │   ├── ActivityController.java   # 活動管理控制器
 │   │   │               │   ├── ActivityRecordController.java # 活動記錄控制器
 │   │   │               │   └── StatisticsController.java # 統計控制器
 │   │   │               ├── dto/                          # 資料傳輸物件
-│   │   │               │   ├── CreateActivityRequest.java # 創建活動請求DTO
-│   │   │               │   ├── RecordResponse.java       # 記錄回應DTO
-│   │   │               │   └── ...
+│   │   │               │   ├── ActivityKPIs.java         # 活動 KPI 指標
+│   │   │               │   ├── ActivityResponse.java     # 活動回應
+│   │   │               │   ├── ActivityStatistics.java   # 活動統計
+│   │   │               │   ├── CreateActivityRequest.java # 創建活動請求
+│   │   │               │   ├── DistributionItem.java     # 分佈資料項目
+│   │   │               │   ├── ErrorResponse.java        # 錯誤回應
+│   │   │               │   ├── LastDayRecordsResponse.java # 昨日記錄回應
+│   │   │               │   ├── PagedRecordResponse.java  # 分頁記錄回應
+│   │   │               │   ├── RecordCreateRequest.java  # 創建記錄請求
+│   │   │               │   ├── RecordFinishRequest.java  # 完成記錄請求
+│   │   │               │   ├── RecordResponse.java       # 記錄回應
+│   │   │               │   ├── RecordUpdateRequest.java  # 更新記錄請求
+│   │   │               │   ├── Summary.java              # 統計摘要
+│   │   │               │   ├── TrendItem.java            # 趨勢資料項目
+│   │   │               │   ├── UpdateActivityRequest.java # 更新活動請求
+│   │   │               │   └── WeeklyTrendItem.java      # 週趨勢項目
 │   │   │               ├── entity/                       # 實體類
 │   │   │               │   ├── Activity.java             # 活動實體類
 │   │   │               │   └── ActivityRecord.java       # 活動記錄實體類
 │   │   │               ├── enums/                        # 枚舉類
 │   │   │               │   └── RecordSource.java         # 記錄來源枚舉
+│   │   │               ├── exception/                    # 異常處理
+│   │   │               │   ├── BadRequestException.java  # 400 錯誤異常
+│   │   │               │   ├── ConflictException.java    # 409 衝突異常
+│   │   │               │   ├── GlobalExceptionHandler.java # 全域異常處理器
+│   │   │               │   └── NotFoundException.java    # 404 未找到異常
 │   │   │               ├── repository/                   # 資料訪問層
 │   │   │               │   ├── ActivityRepository.java   # 活動數據訪問層
 │   │   │               │   └── ActivityRecordRepository.java # 活動記錄數據訪問層
 │   │   │               ├── service/                      # 業務邏輯層
-│   │   │               │   ├── ActivityService.java      # 活動業務邏輯層
 │   │   │               │   ├── ActivityRecordService.java # 活動記錄業務邏輯層
+│   │   │               │   ├── ActivityService.java      # 活動業務邏輯層
+│   │   │               │   ├── CacheEvictionService.java # 快取清除服務
 │   │   │               │   └── StatisticsService.java    # 統計業務邏輯層
 │   │   │               ├── user/                         # 用戶相關
 │   │   │               │   ├── User.java                 # 用戶實體類
@@ -269,25 +307,64 @@ http://localhost:8080/api-docs
 
 ### JPA 配置
 
-- **DDL 自動更新**: `update` - 根據實體類自動更新數據庫結構
+- **DDL 自動更新**: `validate` - 使用 Flyway 管理資料庫結構
 - **顯示 SQL**: `true` - 在控制台顯示執行的 SQL 語句
 - **方言**: PostgreSQL 方言
+- **時區設定**: UTC
+- **Open-in-view**: `false` - 避免 N+1 查詢問題
 
 ### 應用配置
 
 - **服務端口**: 8080
 - **應用名稱**: mymomentum
 - **日誌級別**: DEBUG (用於開發調試)
+- **快取配置**: Caffeine 快取，支援活動分佈、趨勢和 KPI 快取
+- **Flyway 遷移**: 自動執行資料庫遷移腳本
+- **Spring Security**: JWT 認證，Google OAuth 整合
+- **CORS 設定**: 支援前端跨域請求
+- **Actuator 端點**: 健康檢查、指標監控、環境資訊
 
-## 下一步計劃
+## 已完成功能
 
-1. ✅ 創建實體類 (Entity) - **已完成**
-2. ✅ 實現數據訪問層 (Repository) - **已完成**
-3. ✅ 添加業務邏輯層 (Service) - **已完成**
-4. ✅ 完善 REST API 端點 - **已完成**
-5. 添加數據驗證
-6. 實現錯誤處理
-7. 添加單元測試
+1. ✅ **實體類 (Entity)** - Activity, ActivityRecord, User
+2. ✅ **數據訪問層 (Repository)** - 完整的 CRUD 操作
+3. ✅ **業務邏輯層 (Service)** - 活動、記錄、統計服務
+4. ✅ **REST API 端點** - 完整的 RESTful API
+5. ✅ **身份驗證** - Google OAuth + JWT
+6. ✅ **資料驗證** - 完整的請求驗證
+7. ✅ **錯誤處理** - 全域異常處理器
+8. ✅ **快取機制** - Caffeine 快取優化
+9. ✅ **資料庫遷移** - Flyway 版本控制
+10. ✅ **API 文檔** - Swagger/OpenAPI 文檔
+11. ✅ **監控端點** - Spring Boot Actuator
+12. ✅ **安全配置** - Spring Security 整合
+
+## 核心 API 端點
+
+### 身份驗證
+- `POST /auth/google` - Google OAuth 登入
+- `GET /auth/me` - 獲取當前用戶資訊
+
+### 活動管理
+- `GET /api/activities` - 獲取所有活動
+- `POST /api/activities` - 創建新活動
+- `GET /api/activities/{id}` - 獲取單一活動
+- `PUT /api/activities/{id}` - 更新活動
+- `DELETE /api/activities/{id}` - 刪除活動
+
+### 記錄管理
+- `GET /api/records` - 獲取記錄列表
+- `POST /api/records` - 創建新記錄
+- `PATCH /api/records/{id}/finish` - 完成即時記錄
+- `GET /api/records/running` - 獲取進行中的記錄
+
+### 統計分析
+- `GET /api/statistics/summary` - 獲取統計摘要
+- `GET /api/statistics/activities/{id}` - 獲取活動統計
+- `GET /api/statistics/weekly-trend` - 獲取週趨勢
+- `GET /api/activities/{id}/distribution` - 獲取活動分佈數據
+- `GET /api/activities/{id}/trend` - 獲取活動趨勢數據
+- `GET /api/activities/{id}/kpis` - 獲取活動 KPI 指標
 
 ## 注意事項
 
