@@ -4,7 +4,7 @@ MyMomentum is a backend service built with Spring Boot, providing a RESTful API 
 
 - **Google OAuth login** for secure user authentication
 - **JWT-based authentication** for stateless, secure API access
-- **PostgreSQL** for robust data storage
+- **PostgreSQL** for robust data storagetest
 - Designed for easy integration with modern web or mobile frontends
 - Features: user authentication (Google login), activity creation and management, secure API endpoints, and OpenAPI/Swagger documentation
 
