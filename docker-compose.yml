@@ -48,10 +48,13 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        REACT_APP_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
     container_name: mymomentum-frontend
     restart: unless-stopped
     networks:
       - mymomentum-network
+      
 
   nginx:
     image: nginx:alpine

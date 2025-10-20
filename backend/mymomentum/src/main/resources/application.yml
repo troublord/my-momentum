@@ -4,9 +4,9 @@ spring:
   application:
     name: mymomentum
   datasource:
-    url: jdbc:postgresql://localhost:15432/mymomentumdb
-    username: mymomentum
-    password: secret123
+    url: jdbc:postgresql://postgres:5432/mymomentumdb
+    username: ${DB_USERNAME:mymomentum}
+    password: ${DB_PASSWORD:chJdp824nmhtC2X4vZ6p0Q==}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -17,11 +17,11 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate # 改为 validate，让 Flyway 管理 schema
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
+        # format_sql: true  # 生產環境關閉以提高效能
         jdbc:
           time_zone: UTC
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -49,27 +49,27 @@ spring:
 app:
   google:
     oauth:
-      clientId: ${GOOGLE_CLIENT_ID:861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com}
+      clientId: ${GOOGLE_CLIENT_ID}
   security:
     jwt:
-      secret: ${JWT_SECRET:U/tCUvHbDJMpu43mvYlAjG8j+3knvcP5L2L3DLU6In1+sxXLBWJMFuXlD2H+uXqj}
+      secret: ${JWT_SECRET:6056655acbab320d988106f2bfdb19b3332835f21332890ba9a942a25aff91eb}
       expirationMinutes: 240
   cors:
     allowedOrigins:
-      - ${FRONTEND_URL:http://localhost:3000}
+      - ${FRONTEND_URL:http://3.105.126.71}
 
 logging:
   level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    com.ramble.mymomentum: DEBUG
+    org.hibernate.SQL: WARN
+    # org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # 生產環境關閉
+    com.ramble.mymomentum: INFO
 
 # Spring Boot Actuator Configuration
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics,env
+        include: health,info
       base-path: /actuator
   endpoint:
     health:
@@ -81,16 +81,16 @@ management:
     env:
       enabled: true
 
-# OpenAPI/Swagger Configuration
-springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: method
-  info:
-    title: MyMomentum API
-    description: Super momentum management API
-    version: 1.0.0
-    contact:
-      name: Ramble Team
+# OpenAPI/Swagger Configuration (生產環境關閉)
+# springdoc:
+#   api-docs:
+#     path: /api-docs
+#   swagger-ui:
+#     path: /swagger-ui.html
+#     operations-sorter: method
+#   info:
+#     title: MyMomentum API
+#     description: Super momentum management API
+#     version: 1.0.0
+#     contact:
+#       name: Ramble Team

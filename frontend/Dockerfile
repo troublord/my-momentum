@@ -4,6 +4,10 @@ FROM node:18-alpine
 # 設定工作目錄
 WORKDIR /app
 
+# 接受 Google Client ID（CRA 於 build 階段讀取）
+ARG REACT_APP_GOOGLE_CLIENT_ID
+ENV REACT_APP_GOOGLE_CLIENT_ID=$REACT_APP_GOOGLE_CLIENT_ID
+
 # 複製 package 檔案
 COPY package*.json ./
 
