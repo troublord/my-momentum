@@ -20,6 +20,7 @@ services:
       - "8080:8080"
     volumes:
       - ./logs:/app/logs
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
       interval: 30s
