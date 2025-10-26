@@ -98,6 +98,11 @@ management:
       show-components: always
     info:
       enabled: true
+  metrics:
+    # 只關閉 processor metrics
+    jvm:
+      processor:
+        enabled: false
   info:
     env:
       enabled: true
