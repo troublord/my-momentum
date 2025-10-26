@@ -222,20 +222,46 @@ mymomentum/
 
 ## 運行項目
 
-### 1. 啟動數據庫
+### 1. 環境配置
+
+專案支援多環境配置，使用不同的環境檔案：
+
+```bash
+# 開發環境
+env.dev
+
+# 生產環境  
+env.prod
+```
+
+### 2. 啟動數據庫
 
 ```bash
 cd mymomentum-db
 docker-compose up -d
 ```
 
-### 2. 運行 Spring Boot 應用
+### 3. 運行 Spring Boot 應用
 
 ```bash
-mvn spring-boot:run
+# 開發環境
+mvn spring-boot:run -Dspring.profiles.active=local
+
+# 生產環境
+mvn spring-boot:run -Dspring.profiles.active=prod
 ```
 
-### 3. 測試應用
+### 4. 使用 Docker Compose (推薦)
+
+```bash
+# 開發環境
+docker-compose --env-file env.dev up
+
+# 生產環境
+docker-compose --env-file env.prod up
+```
+
+### 5. 測試應用
 
 訪問健康檢查端點：
 
@@ -317,12 +343,34 @@ http://localhost:8080/api-docs
 
 - **服務端口**: 8080
 - **應用名稱**: mymomentum
-- **日誌級別**: DEBUG (用於開發調試)
+- **日誌級別**: DEBUG (開發環境) / INFO (生產環境)
 - **快取配置**: Caffeine 快取，支援活動分佈、趨勢和 KPI 快取
 - **Flyway 遷移**: 自動執行資料庫遷移腳本
 - **Spring Security**: JWT 認證，Google OAuth 整合
 - **CORS 設定**: 支援前端跨域請求
 - **Actuator 端點**: 健康檢查、指標監控、環境資訊
+
+### 環境變數配置
+
+#### 開發環境 (env.dev)
+```bash
+DB_USERNAME=mymomentum
+DB_PASSWORD=secret123
+JWT_SECRET=dev-secret-key
+GOOGLE_CLIENT_ID=your-google-client-id
+FRONTEND_URL=http://localhost:3000
+SPRING_PROFILES_ACTIVE=local
+```
+
+#### 生產環境 (env.prod)
+```bash
+DB_USERNAME=mymomentum
+DB_PASSWORD=secure-production-password
+JWT_SECRET=secure-production-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+FRONTEND_URL=https://my-momentum.app
+SPRING_PROFILES_ACTIVE=prod
+```
 
 ## 已完成功能
 
@@ -366,9 +414,25 @@ http://localhost:8080/api-docs
 - `GET /api/activities/{id}/trend` - 獲取活動趨勢數據
 - `GET /api/activities/{id}/kpis` - 獲取活動 KPI 指標
 
+## Google Cloud Console 設定
+
+### OAuth 2.0 用戶端 ID 設定
+
+1. 前往 [Google Cloud Console](https://console.cloud.google.com/)
+2. 建立或選擇專案
+3. 在 "API 和服務" > "憑證" 中建立 OAuth 2.0 用戶端 ID
+4. 設定已授權的 JavaScript 來源：
+   - 開發環境：`http://localhost:3000`
+   - 生產環境：`https://my-momentum.app`
+5. 設定已授權的重新導向 URI：
+   - `https://my-momentum.app/`
+   - `https://my-momentum.app/auth/callback`
+
 ## 注意事項
 
 - 確保 Docker 和 Docker Compose 已安裝
 - 確保 Java 17 已安裝
 - 確保 Maven 已安裝
-- 首次運行時，Hibernate 會自動創建數據庫表結構
+- 首次運行時，Flyway 會自動執行資料庫遷移腳本
+- 生產環境必須使用 HTTPS
+- Google OAuth 要求生產環境使用 HTTPS
