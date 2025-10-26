@@ -16,7 +16,7 @@ MyMomentum is a backend service built with Spring Boot, providing a RESTful API 
 
 ## 技術棧
 
-- **Java 17**
+- **Java 17** (Eclipse Temurin)
 - **Spring Boot 3.2.0**
 - **Spring Data JPA**
 - **Spring Security**
@@ -29,6 +29,7 @@ MyMomentum is a backend service built with Spring Boot, providing a RESTful API 
 - **Flyway 資料庫遷移**
 - **Spring Cache (Caffeine)**
 - **Springdoc OpenAPI (Swagger)**
+- **Spring Boot Actuator**
 
 ## 項目設置步驟
 
@@ -75,6 +76,7 @@ mymomentum/
 - **Google API Client** (`google-api-client`) - Google OAuth 驗證
 - **JJWT** (`jjwt-*`) - JWT 令牌處理
 - **Flyway** (`flyway-core`) - 資料庫遷移管理
+- **Spring Boot Actuator** (`spring-boot-starter-actuator`) - 監控和健康檢查
 
 ### 3. 數據庫配置
 
@@ -261,12 +263,94 @@ docker-compose --env-file env.dev up
 docker-compose --env-file env.prod up
 ```
 
-### 5. 測試應用
+### 5. Docker 部署
 
-訪問健康檢查端點：
+#### Dockerfile 說明
 
+專案使用多階段建置 Dockerfile：
+
+```dockerfile
+# 建置階段 - 使用官方 Maven 映像
+FROM maven:3.9-eclipse-temurin-17 AS builder
+WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
+RUN mv /app/target/*.jar /app/target/app.jar
+
+# 運行階段
+FROM eclipse-temurin:17-jre-slim
+WORKDIR /app
+COPY --from=builder /app/target/app.jar app.jar
+RUN apt-get update && \
+    apt-get install -y curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV SPRING_PROFILES_ACTIVE=prod
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+CMD ["java", "-jar", "app.jar"]
 ```
-http://localhost:8080/api/test/health
+
+#### 建置和運行
+
+```bash
+# 建置 Docker 映像
+docker build -t mymomentum-backend .
+
+# 運行容器
+docker run -p 8080:8080 \
+  -e DB_USERNAME=mymomentum \
+  -e DB_PASSWORD=your_password \
+  -e JWT_SECRET=your_jwt_secret \
+  -e GOOGLE_CLIENT_ID=your_google_client_id \
+  -e FRONTEND_URL=http://localhost:3000 \
+  mymomentum-backend
+```
+
+#### EC2 部署步驟
+
+1. **上傳專案到 EC2**
+```bash
+scp -r /path/to/my-momentum ec2-user@your-ec2-ip:/home/ec2-user/
+```
+
+2. **設定環境變數**
+```bash
+cd /home/ec2-user/my-momentum
+cp env.prod .env
+```
+
+3. **啟動服務**
+```bash
+# 使用 Docker Compose 啟動
+docker-compose up -d postgres backend
+
+# 檢查服務狀態
+docker-compose ps
+```
+
+4. **測試部署**
+```bash
+# 檢查健康狀態
+curl http://localhost:8080/actuator/health
+
+# 檢查 API 文檔
+curl http://localhost:8080/api-docs
+```
+
+### 6. 測試應用
+
+#### 健康檢查端點
+
+```bash
+# Actuator 健康檢查
+curl http://localhost:8080/actuator/health
+
+# 測試端點
+curl http://localhost:8080/api/test/health
 ```
 
 #### Swagger UI 文檔
@@ -281,6 +365,19 @@ OpenAPI JSON 文檔：
 
 ```
 http://localhost:8080/api-docs
+```
+
+#### Actuator 監控端點
+
+```bash
+# 應用資訊
+curl http://localhost:8080/actuator/info
+
+# 環境資訊
+curl http://localhost:8080/actuator/env
+
+# 指標監控
+curl http://localhost:8080/actuator/metrics
 ```
 
 ## 配置說明
@@ -349,6 +446,8 @@ http://localhost:8080/api-docs
 - **Spring Security**: JWT 認證，Google OAuth 整合
 - **CORS 設定**: 支援前端跨域請求
 - **Actuator 端點**: 健康檢查、指標監控、環境資訊
+- **Docker 多階段建置**: 優化映像大小和建置速度
+- **健康檢查**: Docker HEALTHCHECK 整合 Actuator
 
 ### 環境變數配置
 
@@ -386,6 +485,8 @@ SPRING_PROFILES_ACTIVE=prod
 10. ✅ **API 文檔** - Swagger/OpenAPI 文檔
 11. ✅ **監控端點** - Spring Boot Actuator
 12. ✅ **安全配置** - Spring Security 整合
+13. ✅ **Docker 部署** - 多階段建置和健康檢查
+14. ✅ **生產環境配置** - 環境變數和 Profile 管理
 
 ## 核心 API 端點
 
@@ -431,8 +532,28 @@ SPRING_PROFILES_ACTIVE=prod
 ## 注意事項
 
 - 確保 Docker 和 Docker Compose 已安裝
-- 確保 Java 17 已安裝
-- 確保 Maven 已安裝
+- 確保 Java 17 已安裝（開發環境）
+- 確保 Maven 已安裝（開發環境）
 - 首次運行時，Flyway 會自動執行資料庫遷移腳本
 - 生產環境必須使用 HTTPS
 - Google OAuth 要求生產環境使用 HTTPS
+- Docker 映像使用 Eclipse Temurin JDK 17
+- 健康檢查依賴 Spring Boot Actuator
+- 生產環境建議使用 Docker Compose 部署
+
+## 部署檢查清單
+
+### 開發環境
+- [ ] Java 17 已安裝
+- [ ] Maven 已安裝
+- [ ] Docker 已安裝
+- [ ] PostgreSQL 容器已啟動
+- [ ] 環境變數已設定
+
+### 生產環境
+- [ ] EC2 實例已準備
+- [ ] Docker 已安裝
+- [ ] 環境變數檔案已設定
+- [ ] SSL 憑證已準備（如需要）
+- [ ] 防火牆規則已設定
+- [ ] 健康檢查端點可訪問
