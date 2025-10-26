@@ -2,7 +2,7 @@ import { useCallback, useMemo } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useError } from "../contexts/ErrorContext";
 
-const API_BASE = "";
+const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:8080";
 
 export const useApi = () => {
   const { accessToken, logout } = useAuth();

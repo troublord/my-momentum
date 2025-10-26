@@ -65,8 +65,8 @@ app:
       expirationMinutes: 240
   cors:
     allowedOrigins:
-      # 生產環境：使用環境變數，預設為 EC2 IP
-      - ${FRONTEND_URL:http://your-ec2-ip}
+      # 生產環境：使用環境變數，預設為生產網域
+      - ${FRONTEND_URL:https://my-momentum.app}
 
 # 生產環境：調整日誌等級，減少詳細日誌
 logging:
