@@ -8,7 +8,7 @@ RUN mvn clean package -DskipTests
 RUN mv /app/target/*.jar /app/target/app.jar
 
 # 運行階段
-FROM eclipse-temurin:17-jre-slim
+FROM openjdk:17-jre-slim
 WORKDIR /app
 COPY --from=builder /app/target/app.jar app.jar
 # 只安裝 curl（健康檢查需要）
