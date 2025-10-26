@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: mymomentum
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.actuate.autoconfigure.metrics.SystemMetricsAutoConfiguration
   datasource:
     # 生產環境：使用 Docker 容器名稱作為主機名，標準 PostgreSQL 端口
     url: jdbc:postgresql://postgres:5432/mymomentumdb
