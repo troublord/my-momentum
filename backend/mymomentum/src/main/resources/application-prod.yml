@@ -71,7 +71,7 @@ app:
 # 生產環境：調整日誌等級，減少詳細日誌
 logging:
   file:
-    name: mymomentum.log
+    name: /app/logs/mymomentum.log
     max-history: 30
     max-file-size: 10MB
   level:

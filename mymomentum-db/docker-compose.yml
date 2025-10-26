@@ -13,3 +13,16 @@ services:
       - ./pgdata:/var/lib/postgresql/data
     ports:
       - "15432:5432"
+    networks:
+      - mymomentum-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mymomentum -d mymomentumdb"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  mymomentum-network:
+    name: mymomentum-network
+    driver: bridge
+
