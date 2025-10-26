@@ -40,9 +40,18 @@ npm install
 3. 設定環境變數
 
 ```bash
-# .env
+# 開發環境 (.env.local)
 REACT_APP_API_URL=http://localhost:8080
+REACT_APP_GOOGLE_CLIENT_ID=your-google-client-id
+
+# 生產環境 (.env.production)
+REACT_APP_API_URL=https://my-momentum.app/api
+REACT_APP_GOOGLE_CLIENT_ID=your-google-client-id
 ```
+
+**環境變數說明：**
+- `REACT_APP_API_URL`: 後端 API 基礎 URL
+- `REACT_APP_GOOGLE_CLIENT_ID`: Google OAuth Client ID
 
 4. 啟動開發伺服器
 
@@ -59,11 +68,15 @@ npm start
 3. 在 "API 和服務" > "憑證" 中建立 OAuth 2.0 用戶端 ID
 4. 設定已授權的 JavaScript 來源：
    - 開發環境：`http://localhost:3000`
-   - 生產環境：您的網域
-5. 複製用戶端 ID 並更新 `src/index.tsx`：
+   - 生產環境：`https://my-momentum.app`
+5. 複製用戶端 ID 並設定環境變數：
 
-```typescript
-<GoogleOAuthProvider clientId="your-client-id">
+```bash
+# 開發環境
+REACT_APP_GOOGLE_CLIENT_ID=your-client-id
+
+# 生產環境  
+REACT_APP_GOOGLE_CLIENT_ID=your-client-id
 ```
 
 ## 📁 專案結構
@@ -345,6 +358,14 @@ npm run preview
 - **劉毓文** - 全端開發工程師
 
 ## 📝 版本歷史
+
+### v1.4.0 (2024-12-19)
+
+- ✨ 新增環境配置分離支援
+- ✨ 更新網域設定支援 my-momentum.app
+- ✨ 前端 API URL 支援環境變數配置
+- ✨ Google Client ID 支援環境變數配置
+- 🔧 優化開發與生產環境配置管理
 
 ### v1.3.0 (2024-12-19)
 
