@@ -7,8 +7,8 @@ RUN mvn clean package -DskipTests
 # 重新命名成固定檔名，避免版本號問題
 RUN mv /app/target/*.jar /app/target/app.jar
 
-# 運行階段
-FROM openjdk:17-jdk-slim
+# 運行階段 - 使用完整的 Eclipse Temurin JDK
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY --from=builder /app/target/app.jar app.jar
 # 只安裝 curl（健康檢查需要）
