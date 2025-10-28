@@ -11,6 +11,9 @@ RUN npm ci
 # 複製所有原始碼
 COPY . .
 
+# 設定建置時的環境變數
+ENV REACT_APP_API_URL=/api
+
 # 建置 React 應用
 RUN npm run build
 
