@@ -92,6 +92,20 @@ const LastDayRecordsCard: React.FC<LastDayRecordsCardProps> = ({
     return null; // 錯誤時隱藏整個區塊
   }
 
+  // 如果沒有上次活動日資料，顯示空狀態
+  if (!data.lastDate || data.records.length === 0) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">上次活動日</h3>
+        <div className="text-center py-12 text-gray-500">
+          <div className="text-5xl mb-3">📅</div>
+          <div className="text-lg font-medium mb-2">尚無上次活動紀錄</div>
+          <div className="text-sm">開始記錄您的第一個活動吧！</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
       {/* 標題 */}
