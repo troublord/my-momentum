@@ -6,6 +6,7 @@ spring:
     name: mymomentum
   datasource:
     # 生產環境：使用 Docker 容器名稱作為主機名，標準 PostgreSQL 端口
+    # 此配置用於 Docker Compose 部署，容器間通信
     url: jdbc:postgresql://postgres:5432/mymomentumdb
     username: ${DB_USERNAME:mymomentum}
     password: ${DB_PASSWORD:PgR7!vL2zT8sM0nQ}

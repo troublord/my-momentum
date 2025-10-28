@@ -278,8 +278,8 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 RUN mv /app/target/*.jar /app/target/app.jar
 
-# 運行階段
-FROM eclipse-temurin:17-jre-slim
+# 運行階段 - 使用完整的 Eclipse Temurin JDK
+FROM eclipse-temurin:17-jdk
 WORKDIR /app
 COPY --from=builder /app/target/app.jar app.jar
 RUN apt-get update && \
@@ -310,29 +310,35 @@ docker run -p 8080:8080 \
   mymomentum-backend
 ```
 
-#### EC2 部署步驟
+#### 分離部署步驟
 
-1. **上傳專案到 EC2**
+1. **啟動資料庫服務**
 ```bash
-scp -r /path/to/my-momentum ec2-user@your-ec2-ip:/home/ec2-user/
-```
+# 進入資料庫目錄
+cd mymomentum-db
+docker-compose up -d
 
-2. **設定環境變數**
-```bash
-cd /home/ec2-user/my-momentum
-cp env.prod .env
-```
-
-3. **啟動服務**
-```bash
-# 使用 Docker Compose 啟動
-docker-compose up -d postgres backend
-
-# 檢查服務狀態
+# 驗證資料庫運行
 docker-compose ps
 ```
 
-4. **測試部署**
+2. **部署後端服務**
+```bash
+# 進入後端目錄
+cd ../backend
+
+# 建立 logs 目錄
+mkdir -p logs
+
+# 建置並啟動
+docker-compose build --no-cache
+docker-compose up -d
+
+# 查看日誌
+docker-compose logs -f backend
+```
+
+3. **測試部署**
 ```bash
 # 檢查健康狀態
 curl http://localhost:8080/actuator/health
@@ -340,6 +346,16 @@ curl http://localhost:8080/actuator/health
 # 檢查 API 文檔
 curl http://localhost:8080/api-docs
 ```
+
+#### 關鍵配置
+
+- **資料庫**: 在 `mymomentum-db/docker-compose.yml` 運行
+- **後端**: 在 `backend/docker-compose.yml` 運行
+- **共用網路**: 兩個服務使用相同的 `mymomentum-network`
+- **cgroup 掛載**: 後端需掛載 `/sys/fs/cgroup:/sys/fs/cgroup:ro`
+- **日誌掛載**: 後端日誌掛載到 `./logs`
+
+詳細部署指南請參考 [DEPLOYMENT.md](../DEPLOYMENT.md)
 
 ### 6. 測試應用
 
@@ -448,6 +464,8 @@ curl http://localhost:8080/actuator/metrics
 - **Actuator 端點**: 健康檢查、指標監控、環境資訊
 - **Docker 多階段建置**: 優化映像大小和建置速度
 - **健康檢查**: Docker HEALTHCHECK 整合 Actuator
+- **分離部署架構**: 資料庫和後端獨立管理，支援 CI/CD
+- **共用網路**: 使用 Docker 網路實現服務間通信
 
 ### 環境變數配置
 
@@ -470,6 +488,12 @@ GOOGLE_CLIENT_ID=your-google-client-id
 FRONTEND_URL=https://my-momentum.app
 SPRING_PROFILES_ACTIVE=prod
 ```
+
+**注意**: 生產環境使用 `application-prod.yml`，包含以下特殊配置：
+- 資料庫使用 Docker 容器名稱連接 (`postgres:5432`)
+- 掛載 cgroup 目錄解決 Java 17 cgroup 問題
+- 日誌寫入 `/app/logs/mymomentum.log`
+- 使用環境變數而非硬編碼密碼
 
 ## 已完成功能
 
@@ -554,6 +578,10 @@ SPRING_PROFILES_ACTIVE=prod
 - [ ] EC2 實例已準備
 - [ ] Docker 已安裝
 - [ ] 環境變數檔案已設定
+- [ ] 資料庫網路已建立 (`mymomentum-network`)
+- [ ] 資料庫服務已啟動
+- [ ] 後端 logs 目錄已建立
+- [ ] cgroup 掛載已設定
 - [ ] SSL 憑證已準備（如需要）
 - [ ] 防火牆規則已設定
 - [ ] 健康檢查端點可訪問

@@ -1,0 +1,52 @@
+# 日常使用配置
+# 此檔案用於腳本啟動（-Dspring.profiles.active=local），日誌簡潔
+spring:
+  datasource:
+    # 日常使用：連接本地 Docker 映射的資料庫
+    url: jdbc:postgresql://localhost:15432/mymomentumdb
+    username: mymomentum
+    password: secret123
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    # 日常使用：關閉 SQL 日誌以提高效能
+    show-sql: false
+    properties:
+      hibernate:
+        # format_sql: false  # 關閉 SQL 格式化
+        jdbc:
+          time_zone: UTC
+
+# 應用配置 - 日常使用環境值
+app:
+  google:
+    oauth:
+      clientId: 861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com
+  security:
+    jwt:
+      secret: U/tCUvHbDJMpu43mvYlAjG8j+3knvcP5L2L3DLU6In1+sxXLBWJMFuXlD2H+uXqj
+      expirationMinutes: 240
+  cors:
+    allowedOrigins:
+      - http://localhost:3000
+
+# 日常使用：簡潔日誌
+logging:
+  level:
+    org.hibernate.SQL: WARN
+    # org.hibernate.type.descriptor.sql.BasicBinder: WARN  # 關閉詳細 SQL 日誌
+    com.ramble.mymomentum: INFO
+
+# 日常使用：關閉 Swagger UI 以提高效能
+# springdoc:
+#   api-docs:
+#     path: /api-docs
+#   swagger-ui:
+#     path: /swagger-ui.html
+#     operations-sorter: method
+#   info:
+#     title: MyMomentum API
+#     description: Super momentum management API
+#     version: 1.0.0
+#     contact:
+#       name: Ramble Team
+

@@ -4,9 +4,10 @@ spring:
   application:
     name: mymomentum
   datasource:
-    url: jdbc:postgresql://postgres:5432/mymomentumdb
+    # 開發環境：使用 localhost 連接本地 Docker 映射的資料庫
+    url: jdbc:postgresql://localhost:15432/mymomentumdb
     username: ${DB_USERNAME:mymomentum}
-    password: ${DB_PASSWORD:chJdp824nmhtC2X4vZ6p0Q==}
+    password: ${DB_PASSWORD:secret123}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 10
@@ -17,11 +18,12 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate # 改为 validate，让 Flyway 管理 schema
-    show-sql: false
+    # 調試模式：啟用 SQL 日誌
+    show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        # format_sql: true  # 生產環境關閉以提高效能
+        format_sql: true  # 調試模式啟用 SQL 格式化
         jdbc:
           time_zone: UTC
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -49,20 +51,21 @@ spring:
 app:
   google:
     oauth:
-      clientId: ${GOOGLE_CLIENT_ID}
+      clientId: ${GOOGLE_CLIENT_ID:861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com}
   security:
     jwt:
       secret: ${JWT_SECRET:6056655acbab320d988106f2bfdb19b3332835f21332890ba9a942a25aff91eb}
       expirationMinutes: 240
   cors:
     allowedOrigins:
-      - ${FRONTEND_URL:http://3.105.126.71}
+      - ${FRONTEND_URL:http://localhost:3000}
 
+# 調試模式：詳細日誌
 logging:
   level:
-    org.hibernate.SQL: WARN
-    # org.hibernate.type.descriptor.sql.BasicBinder: TRACE  # 生產環境關閉
-    com.ramble.mymomentum: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    com.ramble.mymomentum: DEBUG
 
 # Spring Boot Actuator Configuration
 management:
@@ -81,16 +84,16 @@ management:
     env:
       enabled: true
 
-# OpenAPI/Swagger Configuration (生產環境關閉)
-# springdoc:
-#   api-docs:
-#     path: /api-docs
-#   swagger-ui:
-#     path: /swagger-ui.html
-#     operations-sorter: method
-#   info:
-#     title: MyMomentum API
-#     description: Super momentum management API
-#     version: 1.0.0
-#     contact:
-#       name: Ramble Team
+# 調試模式：啟用 Swagger UI
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+  info:
+    title: MyMomentum API
+    description: Super momentum management API
+    version: 1.0.0
+    contact:
+      name: Ramble Team
