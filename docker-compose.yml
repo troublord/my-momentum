@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Nginx 反向代理服務
+  nginx:
+    image: nginx:alpine
+    container_name: mymomentum-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./nginx/logs:/var/log/nginx
+    networks:
+      - mymomentum-network
+    depends_on:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # 前端 React 應用
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mymomentum-frontend
+    restart: unless-stopped
+    networks:
+      - mymomentum-network
+
+  # 後端 Spring Boot 應用
+  backend:
+    build:
+      context: ./backend/mymomentum
+      dockerfile: Dockerfile
+    container_name: mymomentum-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_USERNAME: mymomentum
+      DB_PASSWORD: PgR7!vL2zT8sM0nQ
+      JWT_SECRET: 6056655acbab320d988106f2bfdb19b3332835f21332890ba9a942a25aff91eb
+      GOOGLE_CLIENT_ID: 861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com
+      FRONTEND_URL: https://my-momentum.app
+    volumes:
+      - ./backend/logs:/app/logs
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    networks:
+      - mymomentum-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  mymomentum-network:
+    external: true
+    name: mymomentum-network
+
