@@ -27,42 +27,44 @@ jobs:
       - name: Create Pull Request
         if: steps.check-pr.outputs.pr_count == '0'
         run: |
+          COMMITS=$(git log production..dev --oneline --max-count=10)
+          STATS=$(git diff production...dev --stat)
+          
           gh pr create \
             --base production \
             --head dev \
             --title "🤖 Auto PR: merge dev → production" \
             --body "## 🤖 自動建立的 Pull Request
 
-此 PR 由 GitHub Actions 自動建立，將 \`dev\` 分支的變更合併到 \`production\`。
+          此 PR 由 GitHub Actions 自動建立，將 \`dev\` 分支的變更合併到 \`production\`。
 
-### ✅ 檢查清單
-- [ ] CI 已通過
-- [ ] 功能已在 dev 環境測試
-- [ ] 準備部署到 production
+          ### ✅ 檢查清單
+          - [ ] CI 已通過
+          - [ ] 功能已在 dev 環境測試
+          - [ ] 準備部署到 production
 
-### 📝 最近的 Commits
-\`\`\`
-$(git log production..dev --oneline --max-count=10)
-\`\`\`
+          ### 📝 最近的 Commits
+          \`\`\`
+          $COMMITS
+          \`\`\`
 
-### 📊 變更統計
-\`\`\`
-$(git diff production...dev --stat)
-\`\`\`
+          ### 📊 變更統計
+          \`\`\`
+          $STATS
+          \`\`\`
 
----
+          ---
 
-**⚠️ 注意：合併此 PR 後會自動觸發部署到生產環境！**
+          **⚠️ 注意：合併此 PR 後會自動觸發部署到生產環境！**
 
-**🔍 部署流程：**
-1. 合併 PR → production 分支更新
-2. GitHub Actions 自動執行 CD workflow
-3. SSH 連線到 EC2
-4. 執行 docker-compose 重新建置
-5. 約 12 分鐘後部署完成
+          **🔍 部署流程：**
+          1. 合併 PR → production 分支更新
+          2. GitHub Actions 自動執行 CD workflow
+          3. SSH 連線到 EC2
+          4. 執行 docker-compose 重新建置
+          5. 約 12 分鐘後部署完成
 
-**📧 部署完成後會收到通知**
-" \
+          **📧 部署完成後會收到通知**" \
             --label "auto-pr,deployment"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
