@@ -1,0 +1,93 @@
+name: Auto PR - Create Pull Request
+
+on:
+  push:
+    branches: [ dev ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 獲取完整歷史以便比較
+      
+      - name: Fetch all branches
+        run: |
+          git fetch origin production:production || echo "Production branch not found, will skip commit comparison"
+      
+      - name: Check if PR already exists
+        id: check-pr
+        run: |
+          # 檢查是否已有開啟的 PR (dev → production)
+          PR_COUNT=$(gh pr list --base production --head dev --state open --json number --jq 'length')
+          echo "pr_count=$PR_COUNT" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Create Pull Request
+        if: steps.check-pr.outputs.pr_count == '0'
+        run: |
+          # 嘗試取得 commits 和統計，如果失敗則使用預設訊息
+          if git rev-parse production >/dev/null 2>&1; then
+            COMMITS=$(git log production..dev --oneline --max-count=10)
+            STATS=$(git diff production...dev --stat)
+          else
+            COMMITS="無法比較（production 分支不存在）"
+            STATS="N/A"
+          fi
+          
+          gh pr create \
+            --base production \
+            --head dev \
+            --title "🤖 Auto PR: merge dev → production" \
+            --body "## 🤖 自動建立的 Pull Request
+
+          此 PR 由 GitHub Actions 自動建立，將 \`dev\` 分支的變更合併到 \`production\`。
+
+          ### ✅ 檢查清單
+          - [ ] CI 已通過
+          - [ ] 功能已在 dev 環境測試
+          - [ ] 準備部署到 production
+
+          ### 📝 最近的 Commits
+          \`\`\`
+          $COMMITS
+          \`\`\`
+
+          ### 📊 變更統計
+          \`\`\`
+          $STATS
+          \`\`\`
+
+          ---
+
+          **⚠️ 注意：合併此 PR 後會自動觸發部署到生產環境！**
+
+          **🔍 部署流程：**
+          1. 合併 PR → production 分支更新
+          2. GitHub Actions 自動執行 CD workflow
+          3. SSH 連線到 EC2
+          4. 執行 docker-compose 重新建置
+          5. 約 12 分鐘後部署完成
+
+          **📧 部署完成後會收到通知**" \
+            --label "auto-pr,deployment"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update existing PR
+        if: steps.check-pr.outputs.pr_count != '0'
+        run: |
+          echo "✅ PR already exists, it will be automatically updated with new commits"
+          gh pr list --base production --head dev --state open
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
