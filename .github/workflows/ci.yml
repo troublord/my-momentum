@@ -2,9 +2,9 @@ name: CI - Build and Test
 
 on:
   push:
-    branches: [ '**' ]  # 任何分支 push 都會觸發
+    branches: [ dev ]  # dev 分支 push 時觸發
   pull_request:
-    branches: [ production ]  # 針對這些分支的 PR 觸發
+    branches: [ production ]  # PR 到 production 時觸發驗證
 
 jobs:
   build-backend:
