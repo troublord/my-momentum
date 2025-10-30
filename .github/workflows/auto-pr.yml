@@ -15,6 +15,10 @@ jobs:
         with:
           fetch-depth: 0  # 獲取完整歷史以便比較
       
+      - name: Fetch all branches
+        run: |
+          git fetch origin production:production || echo "Production branch not found, will skip commit comparison"
+      
       - name: Check if PR already exists
         id: check-pr
         run: |
@@ -27,8 +31,14 @@ jobs:
       - name: Create Pull Request
         if: steps.check-pr.outputs.pr_count == '0'
         run: |
-          COMMITS=$(git log production..dev --oneline --max-count=10)
-          STATS=$(git diff production...dev --stat)
+          # 嘗試取得 commits 和統計，如果失敗則使用預設訊息
+          if git rev-parse production >/dev/null 2>&1; then
+            COMMITS=$(git log production..dev --oneline --max-count=10)
+            STATS=$(git diff production...dev --stat)
+          else
+            COMMITS="無法比較（production 分支不存在）"
+            STATS="N/A"
+          fi
           
           gh pr create \
             --base production \
