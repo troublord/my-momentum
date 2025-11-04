@@ -1,10 +1,30 @@
+# 資料庫數據
 pgdata/
+
+# 前端快取
 frontend/node_modules/.cache/
-frontend/node_modules/.cache
-frontend/node_modules/.cache
+
+# 文檔
 documents
-backend/mymomentum/start-smart.bat
+
+# IDE 設定
 .idea
+
+# 批次腳本
 backend/mymomentum/start-smart.bat
+
+# ===== 敏感環境變數檔案 =====
 env.prod
+env.production
+env.local
+
+# ===== 敏感 Spring Boot 設定檔 =====
+backend/mymomentum/src/main/resources/application-local.yml
+
+# ===== SSH 金鑰 =====
+*.pem
 mymomentum-key.pem
+
+# ===== 保留範例檔案（這些要提交）=====
+!env.example
+!backend/mymomentum/src/main/resources/application-prod.yml.example
