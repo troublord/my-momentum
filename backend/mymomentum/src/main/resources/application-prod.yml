@@ -8,8 +8,8 @@ spring:
     # 生產環境：使用 Docker 容器名稱作為主機名，標準 PostgreSQL 端口
     # 此配置用於 Docker Compose 部署，容器間通信
     url: jdbc:postgresql://postgres:5432/mymomentumdb
-    username: ${DB_USERNAME:mymomentum}
-    password: ${DB_PASSWORD:PgR7!vL2zT8sM0nQ}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       # 生產環境：增加連線池大小以應對更多併發
@@ -56,18 +56,18 @@ spring:
 app:
   google:
     oauth:
-      # 生產環境：使用環境變數，預設值為開發環境的值
-      clientId: ${GOOGLE_CLIENT_ID:861849830529-44mlejpcr9jjhh19qbvib8vjfbo42gea.apps.googleusercontent.com}
+      # 生產環境：使用環境變數
+      clientId: ${GOOGLE_CLIENT_ID}
   security:
     jwt:
-      # 生產環境：使用環境變數，預設值為新的 JWT Secret
-      secret: ${JWT_SECRET:a911b1ec9e107e5127c9dd9b82abd1a9}
+      # 生產環境：使用環境變數
+      secret: ${JWT_SECRET}
       # 生產環境：延長 token 有效時間
       expirationMinutes: 240
   cors:
     allowedOrigins:
-      # 生產環境：使用環境變數，預設為生產網域
-      - ${FRONTEND_URL:https://my-momentum.app}
+      # 生產環境：使用環境變數
+      - ${FRONTEND_URL}
 
 # 生產環境：調整日誌等級，減少詳細日誌
 logging:
