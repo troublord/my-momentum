@@ -599,7 +599,7 @@ const ActivityDetailCharts: React.FC<ActivityDetailChartsProps> = ({
           icon="🏆"
         />
         <KpiCard
-          title="週環比變化"
+          title="相較於前一周"
           value={
             kpisData
               ? `${(kpisData.weekOverWeekChangePct * 100).toFixed(1)}%`

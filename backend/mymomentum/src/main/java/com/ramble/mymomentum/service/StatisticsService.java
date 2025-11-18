@@ -7,8 +7,14 @@ import com.ramble.mymomentum.dto.WeeklyTrendItem;
 import com.ramble.mymomentum.dto.DistributionItem;
 import com.ramble.mymomentum.dto.TrendItem;
 import com.ramble.mymomentum.dto.ActivityKPIs;
+import com.ramble.mymomentum.dto.ActivityShareItem;
+import com.ramble.mymomentum.dto.OverviewKpis;
+import com.ramble.mymomentum.dto.OverviewTrendPoint;
+import com.ramble.mymomentum.dto.OverviewLogItem;
+import com.ramble.mymomentum.dto.PagedOverviewLogResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import com.ramble.mymomentum.entity.Activity;
 import com.ramble.mymomentum.entity.ActivityRecord;
 import com.ramble.mymomentum.repository.ActivityRepository;
@@ -512,6 +518,216 @@ public class StatisticsService {
                     throw new IllegalArgumentException("Month grain query cannot exceed 3 years");
                 }
             }
+        }
+    }
+
+    // ===== Overview statistics for all activities =====
+
+    /**
+     * Get KPI overview for all activities in a period
+     */
+    public OverviewKpis getOverviewKpis(Long userId, String startDate, String endDate) {
+        try {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            if (start.isAfter(end)) {
+                throw new IllegalArgumentException("Start date cannot be after end date");
+            }
+
+            long daysInRange = ChronoUnit.DAYS.between(start, end) + 1;
+            if (daysInRange > 365) {
+                throw new IllegalArgumentException("Date range cannot exceed 365 days");
+            }
+
+            Instant startInstant = start.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant endInstant = end.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant();
+
+            Long totalDurationSec = activityRecordRepository.getTotalDurationSecInRange(userId, startInstant, endInstant);
+            Long totalCount = activityRecordRepository.getCompletedRecordCountInRange(userId, startInstant, endInstant);
+            Long activeDays = activityRecordRepository.getActiveDaysInRange(userId, startInstant, endInstant, TAIPEI_ZONE.getId());
+
+            int activeDayCount = activeDays != null ? activeDays.intValue() : 0;
+            long totalDuration = totalDurationSec != null ? totalDurationSec : 0L;
+            int totalRecordCount = totalCount != null ? totalCount.intValue() : 0;
+
+            int avgDurationPerDaySec = 0;
+            if (activeDayCount > 0 && totalDuration > 0) {
+                avgDurationPerDaySec = (int) (totalDuration / activeDayCount);
+            }
+
+            // Week-over-week change: compare with previous period of the same length
+            LocalDate prevPeriodEnd = start.minusDays(1);
+            LocalDate prevPeriodStart = prevPeriodEnd.minusDays(daysInRange - 1);
+
+            Instant prevStartInstant = prevPeriodStart.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant prevEndInstant = prevPeriodEnd.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant();
+
+            Long previousDurationSec = activityRecordRepository.getTotalDurationSecInRange(userId, prevStartInstant, prevEndInstant);
+            long previousDuration = previousDurationSec != null ? previousDurationSec : 0L;
+
+            double weekOverWeekChangePct = 0.0;
+            if (previousDuration > 0) {
+                weekOverWeekChangePct = (double) (totalDuration - previousDuration) / previousDuration;
+            } else if (totalDuration > 0) {
+                weekOverWeekChangePct = 1.0;
+            }
+
+            return new OverviewKpis(
+                    totalRecordCount,
+                    totalDuration,
+                    activeDayCount,
+                    avgDurationPerDaySec,
+                    weekOverWeekChangePct
+            );
+        } catch (Exception e) {
+            log.error("Error calculating overview KPIs for user: {}, startDate: {}, endDate: {}", userId, startDate, endDate, e);
+            throw new IllegalArgumentException("Error calculating overview KPIs: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get activity share distribution for donut chart
+     */
+    public List<ActivityShareItem> getOverviewDistribution(Long userId, String startDate, String endDate) {
+        try {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            if (start.isAfter(end)) {
+                throw new IllegalArgumentException("Start date cannot be after end date");
+            }
+
+            long daysInRange = ChronoUnit.DAYS.between(start, end) + 1;
+            if (daysInRange > 365) {
+                throw new IllegalArgumentException("Date range cannot exceed 365 days");
+            }
+
+            Instant startInstant = start.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant endInstant = end.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant();
+
+            log.info("Getting overview activity distribution for user: {}, from: {}, to: {}", userId, startDate, endDate);
+
+            List<Object[]> rows = activityRecordRepository.getOverviewActivityDistribution(userId, startInstant, endInstant);
+
+            return rows.stream()
+                    .map(row -> new ActivityShareItem(
+                            (java.util.UUID) row[0],
+                            (String) row[1],
+                            (String) row[2],
+                            ((Number) row[3]).intValue(),
+                            ((Number) row[4]).longValue()
+                    ))
+                    .toList();
+        } catch (Exception e) {
+            log.error("Error getting overview activity distribution for user: {}, startDate: {}, endDate: {}", userId, startDate, endDate, e);
+            throw new IllegalArgumentException("Error getting overview distribution: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get daily trend for all activities (bar chart)
+     */
+    public List<OverviewTrendPoint> getOverviewTrend(Long userId, String startDate, String endDate, String grain) {
+        try {
+            if (!"day".equalsIgnoreCase(grain)) {
+                throw new IllegalArgumentException("Only 'day' grain is supported for overview trend");
+            }
+
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            if (start.isAfter(end)) {
+                throw new IllegalArgumentException("Start date cannot be after end date");
+            }
+
+            long daysInRange = ChronoUnit.DAYS.between(start, end) + 1;
+            if (daysInRange > 365) {
+                throw new IllegalArgumentException("Date range cannot exceed 365 days");
+            }
+
+            Instant startInstant = start.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant endInstant = end.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant();
+
+            log.info("Getting overview trend for user: {}, from: {}, to: {}", userId, startDate, endDate);
+
+            List<Object[]> rows = activityRecordRepository.getOverviewDailyTrend(
+                    userId,
+                    startDate,
+                    endDate,
+                    startInstant,
+                    endInstant,
+                    TAIPEI_ZONE.getId()
+            );
+
+            return rows.stream()
+                    .map(row -> new OverviewTrendPoint(
+                            (String) row[0],
+                            ((Number) row[1]).longValue(),
+                            ((Number) row[2]).intValue()
+                    ))
+                    .toList();
+        } catch (Exception e) {
+            log.error("Error getting overview trend for user: {}, startDate: {}, endDate: {}", userId, startDate, endDate, e);
+            throw new IllegalArgumentException("Error getting overview trend: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Get paginated activity logs for all activities in date range
+     */
+    public PagedOverviewLogResponse getOverviewLogs(Long userId, String startDate, String endDate, int page, int pageSize) {
+        try {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            if (start.isAfter(end)) {
+                throw new IllegalArgumentException("Start date cannot be after end date");
+            }
+
+            long daysInRange = ChronoUnit.DAYS.between(start, end) + 1;
+            if (daysInRange > 365) {
+                throw new IllegalArgumentException("Date range cannot exceed 365 days");
+            }
+
+            Instant startInstant = start.atStartOfDay(TAIPEI_ZONE).toInstant();
+            Instant endInstant = end.plusDays(1).atStartOfDay(TAIPEI_ZONE).toInstant();
+
+            Page<ActivityRecord> recordsPage = activityRecordRepository.findByUserIdAndExecutedAtRange(
+                    userId,
+                    startInstant,
+                    endInstant,
+                    PageRequest.of(page, pageSize, Sort.by(Sort.Direction.DESC, "executedAt"))
+            );
+
+            List<OverviewLogItem> items = recordsPage.getContent().stream()
+                    .filter(record -> record.getDuration() != null)
+                    .map(record -> {
+                        var activity = record.getActivity();
+                        String activityName = activity != null ? activity.getName() : null;
+                        String icon = activity != null ? activity.getIcon() : null;
+
+                        return new OverviewLogItem(
+                                record.getId(),
+                                record.getActivityId(),
+                                activityName,
+                                icon,
+                                record.getSource(),
+                                record.getDuration(),
+                                record.getExecutedAt()
+                        );
+                    })
+                    .toList();
+
+            return new PagedOverviewLogResponse(
+                    items,
+                    recordsPage.getNumber(),
+                    recordsPage.getSize(),
+                    recordsPage.getTotalElements()
+            );
+        } catch (Exception e) {
+            log.error("Error getting overview logs for user: {}, startDate: {}, endDate: {}", userId, startDate, endDate, e);
+            throw new IllegalArgumentException("Error getting overview logs: " + e.getMessage());
         }
     }
 }
