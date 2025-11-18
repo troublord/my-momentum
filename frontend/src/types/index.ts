@@ -38,6 +38,46 @@ export interface ActivityKpis {
   weekOverWeekChangePct: number; // -0.2 ~ +0.2 (relative change vs previous week)
 }
 
+// Overview (all activities) statistics types
+export interface OverviewKpis {
+  totalCount: number;
+  totalDurationSec: number;
+  activeDays: number;
+  avgDurationPerDaySec: number;
+  weekOverWeekChangePct: number;
+}
+
+export interface ActivityShareItem {
+  activityId: string;
+  activityName: string;
+  icon: ActivityIconType | string;
+  count: number;
+  totalDurationSec: number;
+}
+
+export interface OverviewTrendPoint {
+  date: string; // YYYY-MM-DD
+  totalDurationSec: number;
+  totalCount: number;
+}
+
+export interface ActivityLogItem {
+  recordId: string;
+  activityId: string;
+  activityName: string;
+  icon: ActivityIconType | string;
+  source: "LIVE" | "MANUAL";
+  durationSec: number;
+  executedAt: string; // ISO timestamp
+}
+
+export interface Paginated<T> {
+  data: T[];
+  page: number;
+  size: number;
+  total: number;
+}
+
 // Statistics Service Types
 export type Period = "week" | "month" | "year";
 

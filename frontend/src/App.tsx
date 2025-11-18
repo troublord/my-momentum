@@ -10,6 +10,7 @@ import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import ErrorContainer from "./components/ErrorContainer";
 import LastDayRecordsCard from "./components/LastDayRecordsCard";
 import ActivityDetailPage from "./pages/ActivityDetailPage";
+import ActivitiesOverviewPage from "./pages/ActivitiesOverview";
 import { Activity, Summary, LastDayRecordsResponse } from "./types";
 import IntroPage from "./components/IntroPage";
 import { useAuth } from "./contexts/AuthContext";
@@ -305,6 +306,7 @@ const App: React.FC = () => {
     <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/activities/:id" element={<ActivityDetailPage />} />
+      <Route path="/activities/overview" element={<ActivitiesOverviewPage />} />
     </Routes>
   );
 };

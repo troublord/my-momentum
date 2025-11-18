@@ -149,6 +149,18 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
      */
     @Query("SELECT COALESCE(SUM(ar.duration), 0) / 60 FROM ActivityRecord ar WHERE ar.userId = :userId AND ar.executedAt >= :start AND ar.executedAt < :end AND ar.duration IS NOT NULL")
     Long getTotalMinutesInRange(@Param("userId") Long userId, @Param("start") Instant start, @Param("end") Instant end);
+
+    /**
+     * Calculate total duration in seconds for a user within a date range (only completed records)
+     */
+    @Query("SELECT COALESCE(SUM(ar.duration), 0) FROM ActivityRecord ar WHERE ar.userId = :userId AND ar.executedAt >= :start AND ar.executedAt < :end AND ar.duration IS NOT NULL")
+    Long getTotalDurationSecInRange(@Param("userId") Long userId, @Param("start") Instant start, @Param("end") Instant end);
+
+    /**
+     * Count completed records for a user within a date range
+     */
+    @Query("SELECT COUNT(ar) FROM ActivityRecord ar WHERE ar.userId = :userId AND ar.executedAt >= :start AND ar.executedAt < :end AND ar.duration IS NOT NULL")
+    Long getCompletedRecordCountInRange(@Param("userId") Long userId, @Param("start") Instant start, @Param("end") Instant end);
     
     /**
      * Calculate total duration in minutes for a specific activity within a date range (only completed records)
@@ -350,4 +362,83 @@ public interface ActivityRecordRepository extends JpaRepository<ActivityRecord, 
           AND duration IS NOT NULL
         """, nativeQuery = true)
     Long getTodayTotalDurationByUserId(@Param("userId") Long userId, @Param("timezone") String timezone);
+
+    /**
+     * Count active days (distinct dates with completed records) within a range for a user
+     */
+    @Query(value = """
+        SELECT COUNT(DISTINCT DATE(ar.executed_at AT TIME ZONE :timezone))
+        FROM activity_records ar
+        WHERE ar.user_id = :userId
+          AND ar.executed_at >= :start 
+          AND ar.executed_at < :end
+          AND ar.duration IS NOT NULL
+        """, nativeQuery = true)
+    Long getActiveDaysInRange(@Param("userId") Long userId,
+                              @Param("start") Instant start,
+                              @Param("end") Instant end,
+                              @Param("timezone") String timezone);
+
+    /**
+     * Get activity share distribution for a user in a date range
+     * Returns list of [activity_id, activity_name, icon, record_count, total_duration_sec]
+     */
+    @Query(value = """
+        SELECT 
+            a.id AS activity_id,
+            a.name AS activity_name,
+            COALESCE(a.icon, '') AS icon,
+            COUNT(*) AS record_count,
+            COALESCE(SUM(ar.duration), 0) AS total_duration_sec
+        FROM activity_records ar
+        JOIN activities a ON ar.activity_id = a.id
+        WHERE ar.user_id = :userId
+          AND ar.executed_at >= :fromInstant
+          AND ar.executed_at < :toInstant
+          AND ar.duration IS NOT NULL
+        GROUP BY a.id, a.name, a.icon
+        ORDER BY record_count DESC, total_duration_sec DESC
+        """, nativeQuery = true)
+    List<Object[]> getOverviewActivityDistribution(@Param("userId") Long userId,
+                                                   @Param("fromInstant") Instant fromInstant,
+                                                   @Param("toInstant") Instant toInstant);
+
+    /**
+     * Get daily trend for all activities of a user within date range
+     * Returns list of [date, duration_sec, record_count]
+     */
+    @Query(value = """
+        WITH date_series AS (
+            SELECT CAST(generate_series(
+                CAST(:fromDate AS date),
+                CAST(:toDate AS date),
+                CAST('1 day' AS interval)
+            ) AS date) AS date
+        ),
+        daily_data AS (
+            SELECT 
+                CAST(ar.executed_at AT TIME ZONE :timezone AS date) AS record_date,
+                SUM(ar.duration) AS duration_sec,
+                COUNT(*) AS record_count
+            FROM activity_records ar
+            WHERE ar.user_id = :userId
+              AND ar.executed_at >= :fromInstant
+              AND ar.executed_at < :toInstant
+              AND ar.duration IS NOT NULL
+            GROUP BY record_date
+        )
+        SELECT
+            TO_CHAR(ds.date, 'YYYY-MM-DD') AS date,
+            COALESCE(dd.duration_sec, 0) AS duration_sec,
+            COALESCE(dd.record_count, 0) AS record_count
+        FROM date_series ds
+        LEFT JOIN daily_data dd ON ds.date = dd.record_date
+        ORDER BY ds.date
+        """, nativeQuery = true)
+    List<Object[]> getOverviewDailyTrend(@Param("userId") Long userId,
+                                         @Param("fromDate") String fromDate,
+                                         @Param("toDate") String toDate,
+                                         @Param("fromInstant") Instant fromInstant,
+                                         @Param("toInstant") Instant toInstant,
+                                         @Param("timezone") String timezone);
 }

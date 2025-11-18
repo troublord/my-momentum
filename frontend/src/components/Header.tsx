@@ -1,10 +1,16 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Header: React.FC = () => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleNavigationClick = (section: string) => {
+    if (section === "all-activities") {
+      navigate("/activities/overview");
+      return;
+    }
     console.log(`Navigate to: ${section}`);
   };
 
